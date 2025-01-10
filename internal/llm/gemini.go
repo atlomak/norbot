@@ -35,13 +35,13 @@ type GeminiModel struct {
 	ctx    context.Context
 }
 
-func (m GeminiModel) Query(files []fsutils.FileInfo) tea.Cmd {
+func (m GeminiModel) Query(files []fsutils.Node) tea.Cmd {
 	return func() tea.Msg {
 		s := ""
 		for _, file := range files {
 			s += fmt.Sprintf(
 				"%-20s %-10d %-10s isDir %t %s\n",
-				file.Name, file.Size, file.Permissions, file.IsDir, file.ModTime.Format(time.RFC1123),
+				file.Info.Name(), file.Info.Size(), file.Info.Mode().String(), file.Info.IsDir(), file.Info.ModTime().Format(time.RFC1123),
 			)
 		}
 		resp, err := m.model.GenerateContent(m.ctx, genai.Text(m.prompt), genai.Text(s))

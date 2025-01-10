@@ -1,47 +1,61 @@
 package fsutils
 
 import (
+	"fmt"
+	"io/fs"
+	"log"
 	"os"
-	"time"
-
-	tea "github.com/charmbracelet/bubbletea"
 )
 
-type FilesMsg struct {
-	Files []FileInfo
+type DirMsg struct {
+	Files []Node
 	Err   error
 }
 
-type FileInfo struct {
-	Name        string
-	IsDir       bool
-	Size        int64
-	Permissions string
-	ModTime     time.Time
+type Node struct {
+	Info     fs.FileInfo
+	Children []Node
 }
 
-func ListFiles(dir string) tea.Cmd {
-	return func() tea.Msg {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return FilesMsg{Err: err}
-		}
-
-		var files []FileInfo
-		for _, entry := range entries {
-			info, err := entry.Info()
-			if err != nil {
-				continue
-			}
-
-			files = append(files, FileInfo{
-				Name:        entry.Name(),
-				Size:        info.Size(),
-				Permissions: info.Mode().String(),
-				ModTime:     info.ModTime(),
-				IsDir:       info.IsDir(),
-			})
-		}
-		return FilesMsg{Files: files, Err: nil}
+func listFiles(root string, depth int) ([]Node, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return nil, err
 	}
+
+	var files []Node
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		log.Println(info.Name())
+
+		var node Node
+		if depth != 0 && info.IsDir() {
+			children, err := listFiles(fmt.Sprintf("%s/%s", root, info.Name()), depth-1)
+			if err != nil {
+				return nil, err
+			}
+			node = Node{
+				Info:     info,
+				Children: children,
+			}
+		} else {
+			node = Node{
+				Info:     info,
+				Children: nil,
+			}
+		}
+		files = append(files, node)
+	}
+	return files, err
 }
+
+// func filesToJson(files []FileInfo) ([]byte, error) {
+// 	req, err := json.Marshal(files)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return req, nil
+// }
