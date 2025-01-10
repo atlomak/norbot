@@ -3,7 +3,6 @@ package fsutils
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 )
 
@@ -17,7 +16,7 @@ type Node struct {
 	Children []Node
 }
 
-func listFiles(root string, depth int) ([]Node, error) {
+func ReadDir(root string, depth int) ([]Node, error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil, err
@@ -29,11 +28,10 @@ func listFiles(root string, depth int) ([]Node, error) {
 		if err != nil {
 			continue
 		}
-		log.Println(info.Name())
 
 		var node Node
 		if depth != 0 && info.IsDir() {
-			children, err := listFiles(fmt.Sprintf("%s/%s", root, info.Name()), depth-1)
+			children, err := ReadDir(fmt.Sprintf("%s/%s", root, info.Name()), depth-1)
 			if err != nil {
 				return nil, err
 			}
@@ -52,10 +50,18 @@ func listFiles(root string, depth int) ([]Node, error) {
 	return files, err
 }
 
-// func filesToJson(files []FileInfo) ([]byte, error) {
-// 	req, err := json.Marshal(files)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return req, nil
-// }
+func ListFiles(root string, files []Node) string {
+	s := ""
+	for _, f := range files {
+		relPath := f.Info.Name()
+		if root != "" {
+			relPath = fmt.Sprintf("%s/%s", root, f.Info.Name())
+		}
+		s += fmt.Sprintf("%s\n", relPath)
+
+		if f.Children != nil {
+			s += ListFiles(relPath, f.Children)
+		}
+	}
+	return s
+}
