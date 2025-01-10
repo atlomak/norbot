@@ -7,9 +7,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type Inode struct {
-}
-
 type FilesMsg struct {
 	Files []FileInfo
 	Err   error
