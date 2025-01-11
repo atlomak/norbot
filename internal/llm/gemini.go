@@ -70,11 +70,11 @@ func InitGeminiModel(client *genai.Client, ctx context.Context) GeminiModel {
 				},
 				"name": {
 					Type:        genai.TypeString,
-					Description: "Original name of the file or directory before any action.",
+					Description: "Original name of the file or directory before any action. If it is dir name, keep trailing '/'",
 				},
 				"result": {
 					Type:        genai.TypeString,
-					Description: "New name after action. If file is moved to a new directory, it's name should be with additonal path. If action is keep, the field should be equal to the name. If it is dir name, keep trailing '/'",
+					Description: "New name after action. If file is moved to a new directory, it's name should be with additonal path. If action is keep, the field should be equal to the name.",
 				},
 			},
 		},
