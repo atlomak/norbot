@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/atlomak/norbot/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
@@ -31,9 +32,9 @@ func main() {
 		log.SetOutput(io.Discard)
 	}
 
-	// p := tea.NewProgram(tui.InitModel(client, ctx))
-	// if _, err := p.Run(); err != nil {
-	// 	fmt.Printf("Geez, there's been an error: %v", err)
-	// 	os.Exit(1)
-	// }
+	p := tea.NewProgram(ui.InitModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Geez, there's been an error: %v", err)
+		os.Exit(1)
+	}
 }
