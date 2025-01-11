@@ -32,7 +32,7 @@ func TestOutputSize(t *testing.T) {
 		t.SkipNow()
 	}
 
-	files, err := fsutils.ReadDir("test_dir", 0)
+	files, err := fsutils.ReadDir("../test_dir", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestOutputFileNames(t *testing.T) {
 		t.SkipNow()
 	}
 
-	files, err := fsutils.ReadDir("test_dir", 0)
+	files, err := fsutils.ReadDir("../test_dir", 0)
 	if err != nil {
 		t.Fatal(err)
 	}

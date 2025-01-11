@@ -7,7 +7,7 @@ import (
 func TestReadDir(t *testing.T) {
 
 	depth := 1
-	root := "test_dir"
+	root := "../test_dir"
 
 	files, err := ReadDir(root, depth)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestReadDir(t *testing.T) {
 func TestListFiles(t *testing.T) {
 
 	depth := 1
-	root := "test_dir"
+	root := "../test_dir"
 
 	files, err := ReadDir(root, depth)
 	if err != nil {
@@ -59,7 +59,7 @@ test_file_3.txt
 func TestListFilesDetails(t *testing.T) {
 
 	depth := 1
-	root := "test_dir"
+	root := "../test_dir"
 
 	files, err := ReadDir(root, depth)
 	if err != nil {

@@ -23,7 +23,7 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return readDirCmd("internal/fsutils/test_dir")
+	return readDirCmd("internal/test_dir")
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
