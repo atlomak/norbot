@@ -16,7 +16,9 @@ type Node struct {
 	Children []Node
 }
 
-func ReadDir(root string, depth int) ([]Node, error) {
+type FileList []Node
+
+func ReadDir(root string, depth int) (FileList, error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil, err
@@ -50,7 +52,15 @@ func ReadDir(root string, depth int) ([]Node, error) {
 	return files, err
 }
 
-func ListFiles(root string, files []Node) string {
+func (l FileList) String() string {
+	return listFiles("", l)
+}
+
+func (l FileList) Details() string {
+	return listFilesDetails("", l)
+}
+
+func listFiles(root string, files []Node) string {
 	s := ""
 	for _, f := range files {
 		relPath := f.Info.Name()
@@ -66,13 +76,13 @@ func ListFiles(root string, files []Node) string {
 		s += fmt.Sprintf("%s\n", name)
 
 		if f.Children != nil {
-			s += ListFiles(relPath, f.Children)
+			s += listFiles(relPath, f.Children)
 		}
 	}
 	return s
 }
 
-func ListFilesDetails(root string, files []Node) string {
+func listFilesDetails(root string, files []Node) string {
 	timeFormat := "Jan _2  2006"
 	s := ""
 	for _, f := range files {
@@ -93,7 +103,7 @@ func ListFilesDetails(root string, files []Node) string {
 		)
 
 		if f.Children != nil {
-			s += ListFilesDetails(relPath, f.Children)
+			s += listFilesDetails(relPath, f.Children)
 		}
 	}
 	return s

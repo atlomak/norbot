@@ -14,7 +14,7 @@ func TestReadDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedTotal := 10
+	expectedTotal := 9
 	gotTotal := len(files)
 	for _, f := range files {
 		if f.Info.IsDir() {
@@ -38,7 +38,7 @@ func TestListFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	output := ListFiles("", files)
+	output := files.String()
 	expectedOutput :=
 		`Dir/
 Dir/test_file_1.txt
@@ -66,7 +66,7 @@ func TestListFilesDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	output := ListFilesDetails("", files)
+	output := files.Details()
 
 	t.Logf("\n%s", output)
 
