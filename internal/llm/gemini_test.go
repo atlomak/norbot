@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"sort"
 	"testing"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -58,9 +57,6 @@ func TestOutputFileNames(t *testing.T) {
 	}
 
 	output := generateOutput(files)
-	sort.Slice(output, func(i, j int) bool {
-		return output[i].Name < output[j].Name
-	})
 
 	expectedNames := []string{
 		"Dir/",

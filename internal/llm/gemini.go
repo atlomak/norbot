@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"sort"
 
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/google/generative-ai-go/genai"
@@ -52,7 +53,14 @@ func (m GeminiModel) Query(files fsutils.FileList, prompt string) ([]Action, err
 			}
 		}
 	}
+	sortActions(actions)
 	return actions, nil
+}
+
+func sortActions(actions []Action) {
+	sort.Slice(actions, func(i, j int) bool {
+		return actions[i].Name < actions[j].Name
+	})
 }
 
 func InitGeminiModel(client *genai.Client, ctx context.Context) GeminiModel {
