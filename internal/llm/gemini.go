@@ -3,11 +3,8 @@ package llm
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"time"
 
 	"github.com/atlomak/norbot/internal/fsutils"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/generative-ai-go/genai"
 )
 
@@ -20,13 +17,9 @@ Respond with provided schema.
 `
 
 type Action struct {
+	Name   string
 	Type   string
 	Result string
-}
-
-type GeminiMsg struct {
-	Actions map[string]Action
-	Err     error
 }
 
 type GeminiModel struct {
@@ -35,66 +28,60 @@ type GeminiModel struct {
 	ctx    context.Context
 }
 
-func (m GeminiModel) Query(files []fsutils.Node) tea.Cmd {
-	return func() tea.Msg {
-		s := ""
-		for _, file := range files {
-			s += fmt.Sprintf(
-				"%-20s %-10d %-10s isDir %t %s\n",
-				file.Info.Name(), file.Info.Size(), file.Info.Mode().String(), file.Info.IsDir(), file.Info.ModTime().Format(time.RFC1123),
-			)
-		}
-		resp, err := m.model.GenerateContent(m.ctx, genai.Text(m.prompt), genai.Text(s))
-		if err != nil {
-			return GeminiMsg{Err: err}
-		}
+func (m GeminiModel) Query(files fsutils.FileList, prompt string) ([]Action, error) {
+	var resp *genai.GenerateContentResponse
+	var err error
+	if prompt != "" {
+		resp, err = m.model.GenerateContent(m.ctx, genai.Text(m.prompt), genai.Text(files.Details()))
+	} else {
+		resp, err = m.model.GenerateContent(m.ctx, genai.Text(files.Details()))
+	}
+	if err != nil {
+		return nil, err
+	}
 
-		msg := GeminiMsg{
-			Actions: map[string]Action{},
-		}
-		for _, part := range resp.Candidates[0].Content.Parts {
-			if txt, ok := part.(genai.Text); ok {
-				var actions []map[string]string
-				if err := json.Unmarshal([]byte(txt), &actions); err != nil {
-					return GeminiMsg{Err: err}
-				}
-				for _, action := range actions {
-					// log.Println("Hello world")
-					msg.Actions[action["name"]] = Action{Type: action["action"], Result: action["output"]}
-				}
-				return msg
+	actions := make([]Action, 0, len(files))
+	for _, part := range resp.Candidates[0].Content.Parts {
+		if txt, ok := part.(genai.Text); ok {
+			var output []map[string]string
+			if err := json.Unmarshal([]byte(txt), &output); err != nil {
+				return nil, err
+			}
+			for _, action := range output {
+				actions = append(actions, Action{Name: action["name"], Type: action["action"], Result: action["result"]})
 			}
 		}
-		return GeminiMsg{}
 	}
+	return actions, nil
 }
 
 func InitGeminiModel(client *genai.Client, ctx context.Context) GeminiModel {
 
-	genAI := client.GenerativeModel("gemini-1.5-flash")
-	genAI.ResponseMIMEType = "application/json"
-	genAI.ResponseSchema = &genai.Schema{
+	model := client.GenerativeModel("gemini-1.5-flash")
+	model.ResponseMIMEType = "application/json"
+	model.ResponseSchema = &genai.Schema{
 		Type: genai.TypeArray,
 		Items: &genai.Schema{
 			Type: genai.TypeObject,
 			Properties: map[string]*genai.Schema{
 				"action": {
 					Type: genai.TypeString,
-					Enum: []string{"move", "rename", "keep", "create"},
+					Enum: []string{"move", "rename", "keep"},
 				},
 				"name": {
-					Type: genai.TypeString,
-				},
-				"output": {
 					Type:        genai.TypeString,
-					Description: "Output of an action. Eg. action: rename, output: new name",
+					Description: "Original name of the file or directory before any action.",
+				},
+				"result": {
+					Type:        genai.TypeString,
+					Description: "New name after action. If file is moved to a new directory, it's name should be with additonal path. If action is keep, the field should be equal to the name. If it is dir name, keep trailing '/'",
 				},
 			},
 		},
 	}
+	model.SystemInstruction = genai.NewUserContent(genai.Text(query))
 	return GeminiModel{
-		model:  genAI,
-		prompt: query,
-		ctx:    ctx,
+		model: model,
+		ctx:   ctx,
 	}
 }
