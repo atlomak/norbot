@@ -57,10 +57,43 @@ func ListFiles(root string, files []Node) string {
 		if root != "" {
 			relPath = fmt.Sprintf("%s/%s", root, f.Info.Name())
 		}
-		s += fmt.Sprintf("%s\n", relPath)
+
+		name := relPath
+		if f.Info.IsDir() {
+			name += "/"
+		}
+
+		s += fmt.Sprintf("%s\n", name)
 
 		if f.Children != nil {
 			s += ListFiles(relPath, f.Children)
+		}
+	}
+	return s
+}
+
+func ListFilesDetails(root string, files []Node) string {
+	timeFormat := "Jan _2  2006"
+	s := ""
+	for _, f := range files {
+		relPath := f.Info.Name()
+		if root != "" {
+			relPath = fmt.Sprintf("%s/%s", root, f.Info.Name())
+		}
+
+		name := relPath
+		if f.Info.IsDir() {
+			name += "/"
+		}
+
+		s += fmt.Sprintf("%8d %s %s\n",
+			f.Info.Size(),
+			f.Info.ModTime().Format(timeFormat),
+			name,
+		)
+
+		if f.Children != nil {
+			s += ListFilesDetails(relPath, f.Children)
 		}
 	}
 	return s

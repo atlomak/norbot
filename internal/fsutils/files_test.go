@@ -40,19 +40,34 @@ func TestListFiles(t *testing.T) {
 
 	output := ListFiles("", files)
 	expectedOutput :=
-		`Dir
+		`Dir/
 Dir/test_file_1.txt
 Dir/test_file_2.txt
-Dir2
+Dir2/
 Dir2/test_file_1.txt
 Dir2/test_file_2.txt
-Dir3
 test_file.txt
 test_file_2.txt
 test_file_3.txt
 `
 	if output != expectedOutput {
-		t.Fatalf("\nexpected:%s\ngot:\n%s\n", expectedOutput, output)
+		t.Fatalf("\nexpected:\n%s\ngot:\n%s\n", expectedOutput, output)
 	}
+
+}
+
+func TestListFilesDetails(t *testing.T) {
+
+	depth := 1
+	root := "test_dir"
+
+	files, err := ReadDir(root, depth)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output := ListFilesDetails("", files)
+
+	t.Logf("\n%s", output)
 
 }
