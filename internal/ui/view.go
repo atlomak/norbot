@@ -69,5 +69,10 @@ func renderItem(it item) string {
 }
 
 func (m model) View() string {
-	return "\n" + m.list.View()
+	var s string
+	if m.waiting {
+		s += m.spinner.View()
+	}
+	s += "\n" + m.list.View()
+	return s
 }

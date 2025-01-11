@@ -3,7 +3,10 @@ package ui
 import (
 	"log"
 
+	"github.com/atlomak/norbot/internal/fsutils"
+	"github.com/atlomak/norbot/internal/llm"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -19,11 +22,15 @@ var (
 )
 
 type model struct {
-	list list.Model
+	list    list.Model
+	files   fsutils.FileList
+	llm     *llm.GeminiModel
+	spinner spinner.Model
+	waiting bool
 }
 
 func (m model) Init() tea.Cmd {
-	return readDirCmd("internal/test_dir")
+	return tea.Batch(readDir("internal/test_dir"), m.spinner.Tick)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -36,34 +43,51 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "enter":
+			m.waiting = true
+			queryCmd := m.queryResult(m.files)
+			return m, queryCmd
 		}
 	case readDirMsg:
 		if msg.err != nil {
 			log.Fatal(msg.err.Error())
 		}
-		cmd := m.list.SetItems(msg.items)
+		m.files = msg.files
+		items := filesToItems(m.files)
+		cmd := m.list.SetItems(items)
 		return m, cmd
+	case queryResultMsg:
+		if msg.err != nil {
+			log.Fatal(msg.err.Error())
+		}
+		m.waiting = false
+		return m, nil
 	}
 
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
-	return m, cmd
+	var listCmd, spinCmd tea.Cmd
+
+	m.spinner, spinCmd = m.spinner.Update(msg)
+	m.list, listCmd = m.list.Update(msg)
+	return m, tea.Batch(spinCmd, listCmd)
 }
 
-func InitModel() model {
+func InitModel(llm *llm.GeminiModel) model {
 	items := []list.Item{}
 
-	const defaultWidth = 20
+	const defaultWidth = 30
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	l.Title = "Files"
-	l.SetShowStatusBar(false)
+	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	m := model{list: l}
+	spin := spinner.New()
+	spin.Spinner = spinner.Pulse
+
+	m := model{list: l, llm: llm, spinner: spin}
 
 	return m
 }

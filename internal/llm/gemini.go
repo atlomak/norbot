@@ -63,7 +63,7 @@ func sortActions(actions []Action) {
 	})
 }
 
-func InitGeminiModel(client *genai.Client, ctx context.Context) GeminiModel {
+func InitGeminiModel(client *genai.Client, ctx context.Context) *GeminiModel {
 
 	model := client.GenerativeModel("gemini-1.5-flash")
 	model.ResponseMIMEType = "application/json"
@@ -88,7 +88,7 @@ func InitGeminiModel(client *genai.Client, ctx context.Context) GeminiModel {
 		},
 	}
 	model.SystemInstruction = genai.NewUserContent(genai.Text(query))
-	return GeminiModel{
+	return &GeminiModel{
 		model: model,
 		ctx:   ctx,
 	}

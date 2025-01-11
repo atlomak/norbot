@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/atlomak/norbot/internal/llm"
 	"github.com/atlomak/norbot/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/generative-ai-go/genai"
@@ -21,6 +22,8 @@ func main() {
 	}
 	defer client.Close()
 
+	llm := llm.InitGeminiModel(client, ctx)
+
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
@@ -32,7 +35,7 @@ func main() {
 		log.SetOutput(io.Discard)
 	}
 
-	p := tea.NewProgram(ui.InitModel())
+	p := tea.NewProgram(ui.InitModel(llm))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Geez, there's been an error: %v", err)
 		os.Exit(1)

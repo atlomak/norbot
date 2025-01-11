@@ -1,20 +1,25 @@
 package ui
 
 import (
-	"log"
 	"strings"
 
 	"github.com/atlomak/norbot/internal/fsutils"
+	"github.com/atlomak/norbot/internal/llm"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type readDirMsg struct {
-	items []list.Item
+	files fsutils.FileList
 	err   error
 }
 
-func readDirCmd(root string) tea.Cmd {
+type queryResultMsg struct {
+	actions []llm.Action
+	err     error
+}
+
+func readDir(root string) tea.Cmd {
 	return func() tea.Msg {
 		files, err := fsutils.ReadDir(root, 1)
 		if err != nil {
@@ -22,9 +27,7 @@ func readDirCmd(root string) tea.Cmd {
 				err: err,
 			}
 		}
-		items := filesToItems(files)
-		log.Println(files)
-		return readDirMsg{items: items, err: nil}
+		return readDirMsg{files: files, err: nil}
 	}
 }
 
@@ -38,4 +41,14 @@ func filesToItems(files fsutils.FileList) []list.Item {
 		items = append(items, item(file))
 	}
 	return items
+}
+
+func (m model) queryResult(files fsutils.FileList) tea.Cmd {
+	return func() tea.Msg {
+		actions, err := m.llm.Query(files, "")
+		if err != nil {
+			return queryResultMsg{err: err}
+		}
+		return queryResultMsg{actions: actions, err: nil}
+	}
 }
