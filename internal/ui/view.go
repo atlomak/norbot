@@ -12,6 +12,7 @@ import (
 const (
 	dirIcon  = "\U0001F4C1"
 	fileIcon = "\U0001F4C4"
+	newFile  = "\U00002728"
 )
 
 type item struct {
@@ -34,9 +35,14 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	}
 
 	const colWidthName = 50
-	const colWidthAction = 7
-	const colWidthResult = 50
-	str := fmt.Sprintf("%-*s %-*s %-*s", colWidthName, renderItem(i.name), colWidthAction, i.action, colWidthResult, renderItem(i.result))
+	const colWidthAction = 10
+
+	var str string
+	if i.name == "" {
+		str = fmt.Sprintf("%-*s %-*s %s", colWidthName, newFile, colWidthAction, i.action, renderItem(i.result))
+	} else {
+		str = fmt.Sprintf("%-*s %-*s %s", colWidthName, renderItem(i.name), colWidthAction, i.action, renderItem(i.result))
+	}
 
 	fn := itemStyle.Render
 	if index == m.Index() {
