@@ -18,7 +18,7 @@ type queryResultMsg struct {
 
 func readDir(root string) tea.Cmd {
 	return func() tea.Msg {
-		files, err := fsutils.ReadDir(root, 1)
+		files, err := fsutils.ReadDir(root, 0)
 		if err != nil {
 			return readDirMsg{
 				err: err,

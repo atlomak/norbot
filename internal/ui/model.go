@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -25,13 +26,14 @@ var (
 type model struct {
 	list    list.Model
 	files   fsutils.FileList
+	actions map[string]llm.Action
 	llm     *llm.GeminiModel
 	spinner spinner.Model
 	waiting bool
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(readDir("internal/test_dir"), m.spinner.Tick)
+	return tea.Batch(readDir("."), m.spinner.Tick)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -61,11 +63,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Fatal(msg.err.Error())
 		}
-		for _, v := range msg.actions {
-			log.Println(v)
-		}
+		m.actions = actionsToMap(msg.actions)
+		cmd := m.list.SetItems(m.resultsToItems(m.actions))
 		m.waiting = false
-		return m, nil
+		return m, cmd
 	}
 
 	var listCmd, spinCmd tea.Cmd
@@ -73,6 +74,35 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.spinner, spinCmd = m.spinner.Update(msg)
 	m.list, listCmd = m.list.Update(msg)
 	return m, tea.Batch(spinCmd, listCmd)
+}
+
+func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
+	items := filesToItems(m.files)
+	for index, listItem := range items {
+		fileItem := listItem.(item)
+		if action, exists := actionResults[fileItem.name]; exists {
+			fileItem.action = action.Type
+			fileItem.result = action.Result
+			items[index] = fileItem
+			delete(actionResults, fileItem.name)
+		}
+	}
+
+	for _, remainingAction := range actionResults {
+		newItem := item{
+			action: remainingAction.Type,
+			result: remainingAction.Result,
+		}
+		items = append(items, newItem)
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		itemA := items[i].(item)
+		itemB := items[j].(item)
+		return itemA.result < itemB.result
+	})
+
+	return items
 }
 
 func filesToItems(files fsutils.FileList) []list.Item {
@@ -85,6 +115,15 @@ func filesToItems(files fsutils.FileList) []list.Item {
 		items = append(items, item{name: file})
 	}
 	return items
+}
+
+func actionsToMap(actions []llm.Action) map[string]llm.Action {
+	result := make(map[string]llm.Action)
+	for _, action := range actions {
+		log.Println(action)
+		result[action.Name] = action
+	}
+	return result
 }
 
 func InitModel(llm *llm.GeminiModel) model {
