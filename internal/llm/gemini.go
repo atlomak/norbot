@@ -9,13 +9,54 @@ import (
 	"github.com/google/generative-ai-go/genai"
 )
 
-var query string = `
-Organize files in a directory. Rename files for consistency.
-For photos, group into Year/Month folders using creation dates. For other files,
-organize by type in subdirectories.
-If you don't know what to do with specific file, just leave it as is.
-Respond with provided schema.
+const (
+	query string = `
+You are an assistant helping to clean and organize directories efficiently. 
+For each file or directory in the provided list, determine an appropriate action:
+- If it is a photo, move it to a 'Photos/YYYY/MM' folder based on its creation date. 
+  Create the 'Photos/YYYY' and 'Photos/YYYY/MM' folders if they do not already exist.
+- For documents (e.g., PDFs, DOCs), move them to a 'Documents' folder, grouped by type. 
+  Create the 'Documents' folder if it does not exist.
+- For media files like videos or music, organize them into 'Videos' or 'Music' folders. 
+  Create these folders if they do not exist.
+- For archives (e.g., ZIP, RAR), move them to an 'Archives' folder. 
+  Create the 'Archives' folder if it does not exist.
+- Leave system or configuration files (e.g., hidden files, .log, .conf) in their current locations.
+- For files that do not match a known category, leave them in place.
+- Whenever a folder is created, include a record for that action.
+
+Rename files with inconsistent naming to use lowercase and replace spaces with underscores. 
+Ensure all actions follow a clear, user-friendly folder structure.
+
+Examples of actions:
+1. If a photo is moved to 'Photos/2025/01', provide:
+   { "action": "create", "name": "", "result": "Photos/" }
+   { "action": "create", "name": "", "result": "Photos/2025/" }
+   { "action": "create", "name": "", "result": "Photos/2025/01/" }
+   { "action": "move", "name": "example.jpg", "result": "Photos/2025/01/example.jpg" }
+2. If a file is renamed, provide:
+   { "action": "move", "name": "old file.txt", "result": "old_file.txt" }
+3. If a file is left in place, provide:
+   { "action": "keep", "name": "example.conf", "result": "example.conf" }
 `
+
+	actionsDesciption = `
+The type of operation to be performed. Possible values are:
+- 'move': File or directory is moved to a new location or changed name.
+- 'keep': File or directory is left unchanged.
+- 'create': A new folder is created.`
+
+	nameDescription = `
+The original name or path of the file or directory before any action. 
+ - If the action is "create", this field should be an empty string as there is no original path.
+ - For directories, always include a trailing "/" at the end of the name.`
+
+	resultDescription = `
+The new name or path of the file or directory after the action. 
+  - If the action is "keep", this field should match the "name" field.	
+  - For directories, always include a trailing "/" at the end of the name.
+`
+)
 
 type Action struct {
 	Name   string
@@ -73,16 +114,17 @@ func InitGeminiModel(client *genai.Client, ctx context.Context) *GeminiModel {
 			Type: genai.TypeObject,
 			Properties: map[string]*genai.Schema{
 				"action": {
-					Type: genai.TypeString,
-					Enum: []string{"move", "rename", "keep"},
+					Type:        genai.TypeString,
+					Enum:        []string{"move", "keep", "create"},
+					Description: actionsDesciption,
 				},
 				"name": {
 					Type:        genai.TypeString,
-					Description: "Original name of the file or directory before any action. If it is dir name, keep trailing '/'",
+					Description: nameDescription,
 				},
 				"result": {
 					Type:        genai.TypeString,
-					Description: "New name after action. If file is moved to a new directory, it's name should be with additonal path. If action is keep, the field should be equal to the name.",
+					Description: resultDescription,
 				},
 			},
 		},

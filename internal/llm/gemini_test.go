@@ -76,6 +76,7 @@ func TestOutputFileNames(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			outputName := output[i].Name
 			if name != outputName {
+				t.Log(output)
 				t.Fatalf("expected: %s, got: %s\n", name, outputName)
 			}
 		})
