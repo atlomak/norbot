@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"strings"
 
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
@@ -72,6 +73,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.spinner, spinCmd = m.spinner.Update(msg)
 	m.list, listCmd = m.list.Update(msg)
 	return m, tea.Batch(spinCmd, listCmd)
+}
+
+func filesToItems(files fsutils.FileList) []list.Item {
+	items := make([]list.Item, 0, len(files))
+
+	s := strings.Split(files.String(), "\n")
+	s = s[:len(s)-1] // because of newline at the end of string
+
+	for _, file := range s {
+		items = append(items, item{name: file})
+	}
+	return items
 }
 
 func InitModel(llm *llm.GeminiModel) model {
