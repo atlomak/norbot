@@ -13,14 +13,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-)
-
 type model struct {
 	list     list.Model
 	files    fsutils.FileList
@@ -84,6 +76,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.spinner, spinCmd = m.spinner.Update(msg)
 	m.list, listCmd = m.list.Update(msg)
 	return m, tea.Batch(spinCmd, listCmd)
+}
+
+func (m model) View() string {
+	var s string
+	// if m.waiting {
+	// 	s += m.spinner.View()
+	// }
+	s += lipgloss.JoinVertical(lipgloss.Top, "Hello panel/n", m.list.View())
+	// s += "\n" + m.list.View()
+	return s
 }
 
 func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
@@ -154,22 +156,11 @@ func maxDepth(actions []llm.Action) int {
 }
 
 func InitModel(llm *llm.GeminiModel) model {
-	items := []list.Item{}
-
-	const defaultWidth = 120
-	const listHeight = 30
-
-	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Files"
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
 
 	spin := spinner.New()
 	spin.Spinner = spinner.Pulse
 
+	l := initList()
 	m := model{list: l, llm: llm, spinner: spin}
 
 	return m
