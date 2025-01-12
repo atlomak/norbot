@@ -28,6 +28,7 @@ type model struct {
 	llm     *llm.GeminiModel
 	spinner spinner.Model
 	waiting bool
+	ready   bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -48,6 +49,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.waiting = true
 			queryCmd := m.queryResult(m.files)
 			return m, queryCmd
+		case "y":
+			m.actions = nil
+			return m, m.applyChanges
 		}
 	case readDirMsg:
 		if msg.err != nil {
@@ -64,7 +68,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.actions = actionsToMap(msg.actions)
 		cmd := m.list.SetItems(m.resultsToItems(m.actions))
 		m.waiting = false
+		m.ready = true
 		return m, cmd
+	case applyChangesMsg:
+		if msg.err != nil {
+			log.Fatal(msg.err.Error())
+		}
+		return m, readDir(".")
 	}
 
 	var listCmd, spinCmd tea.Cmd
