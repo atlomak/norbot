@@ -13,8 +13,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const listHeight = 14
-
 var (
 	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
@@ -130,10 +128,11 @@ func InitModel(llm *llm.GeminiModel) model {
 	items := []list.Item{}
 
 	const defaultWidth = 30
+	const listHeight = 30
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	l.Title = "Files"
-	l.SetShowStatusBar(true)
+	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
