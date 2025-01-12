@@ -20,9 +20,9 @@ type applyChangesMsg struct {
 	err error
 }
 
-func readDir(root string) tea.Cmd {
+func readDir(root string, depth int) tea.Cmd {
 	return func() tea.Msg {
-		files, err := fsutils.ReadDir(root, 0)
+		files, err := fsutils.ReadDir(root, depth)
 		if err != nil {
 			return readDirMsg{
 				err: err,

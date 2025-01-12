@@ -22,17 +22,18 @@ var (
 )
 
 type model struct {
-	list    list.Model
-	files   fsutils.FileList
-	actions map[string]llm.Action
-	llm     *llm.GeminiModel
-	spinner spinner.Model
-	waiting bool
-	ready   bool
+	list     list.Model
+	files    fsutils.FileList
+	actions  map[string]llm.Action
+	llm      *llm.GeminiModel
+	spinner  spinner.Model
+	waiting  bool
+	ready    bool
+	maxDepth int
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(readDir("."), m.spinner.Tick)
+	return tea.Batch(readDir(".", 0), m.spinner.Tick)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -65,6 +66,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Fatal(msg.err.Error())
 		}
+		m.maxDepth = maxDepth(msg.actions)
 		m.actions = actionsToMap(msg.actions)
 		cmd := m.list.SetItems(m.resultsToItems(m.actions))
 		m.waiting = false
@@ -74,7 +76,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Fatal(msg.err.Error())
 		}
-		return m, readDir(".")
+		return m, readDir(".", m.maxDepth)
 	}
 
 	var listCmd, spinCmd tea.Cmd
@@ -137,6 +139,18 @@ func actionsToMap(actions []llm.Action) map[string]llm.Action {
 		}
 	}
 	return result
+}
+
+func maxDepth(actions []llm.Action) int {
+	maxDepth := 0
+	for _, action := range actions {
+		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
+		parents := len(path) - 1
+		if parents > maxDepth {
+			maxDepth = parents
+		}
+	}
+	return maxDepth
 }
 
 func InitModel(llm *llm.GeminiModel) model {
