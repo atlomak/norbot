@@ -27,6 +27,9 @@ For each file or directory in the provided list, determine an appropriate action
 
 Rename files with inconsistent naming to use lowercase and replace spaces with underscores. 
 Ensure all actions follow a clear, user-friendly folder structure.
+When renaming or moving files, ensure there are no name conflicts in the destination directory:
+- If a file with the same name already exists in the target location, add a unique suffix (e.g., "_1", "_2") to the file name
+or don't move it at all to prevent overwriting or conflicts.
 
 Examples of actions:
 1. If a photo is moved to 'Photos/2025/01', provide:
