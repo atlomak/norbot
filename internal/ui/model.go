@@ -87,6 +87,7 @@ func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
 	}
 
 	for _, remainingAction := range actionResults {
+		log.Printf("add create actions: %s", remainingAction)
 		newItem := item{
 			action: remainingAction.Type,
 			result: remainingAction.Result,
@@ -97,7 +98,7 @@ func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
 	sort.Slice(items, func(i, j int) bool {
 		itemA := items[i].(item)
 		itemB := items[j].(item)
-		return itemA.result < itemB.result
+		return itemA.result <= itemB.result
 	})
 
 	return items
@@ -119,7 +120,11 @@ func actionsToMap(actions []llm.Action) map[string]llm.Action {
 	result := make(map[string]llm.Action)
 	for _, action := range actions {
 		log.Println(action)
-		result[action.Name] = action
+		if action.Name == "" {
+			result[action.Result] = action
+		} else {
+			result[action.Name] = action
+		}
 	}
 	return result
 }
