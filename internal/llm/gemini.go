@@ -32,13 +32,12 @@ When renaming or moving files, ensure there are no name conflicts in the destina
 or don't move it at all to prevent overwriting or conflicts.
 
 Examples of actions:
-1. If a photo is moved to 'Photos/2025/01', provide:
-   { "action": "create", "name": "", "result": "Photos/" }
-   { "action": "create", "name": "", "result": "Photos/2025/" }
-   { "action": "create", "name": "", "result": "Photos/2025/01/" }
-   { "action": "move", "name": "example.jpg", "result": "Photos/2025/01/example.jpg" }
+1. If a photo is moved to 'NewDir/NewSubDir', provide:
+   { "action": "create", "name": "", "result": "NewDir/" }
+   { "action": "create", "name": "", "result": "NewDir/NewSubDir/" }
+   { "action": "move", "name": "example.jpg", "result": "NewDir/NewSubDir/example.jpg" }
 2. If a file is renamed, provide:
-   { "action": "move", "name": "old file.txt", "result": "old_file.txt" }
+   { "action": "move", "name": "old-file.txt", "result": "old_file.txt" }
 3. If a file is left in place, provide:
    { "action": "keep", "name": "example.conf", "result": "example.conf" }
 `
@@ -107,9 +106,24 @@ func sortActions(actions []Action) {
 	})
 }
 
+// func safeguardMissingCreates(files fsutils.FileList, actins []Action) []Action {
+// 	entries := files.String()
+// 	check := map[string]int
+
+// 	for _, v := range entries {
+// 		check[v] = 1
+// 	}
+
+// 	for _, v := range actins {
+// 		path := strings.Split(strings.TrimSuffix(file, "/"), "/")
+// 		for
+// 	}
+
+// }
+
 func InitGeminiModel(client *genai.Client, ctx context.Context) *GeminiModel {
 
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("gemini-1.5-pro")
 	model.ResponseMIMEType = "application/json"
 	model.ResponseSchema = &genai.Schema{
 		Type: genai.TypeArray,
