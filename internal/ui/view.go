@@ -33,8 +33,8 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	const colWidthName = 30
-	const colWidthAction = 10
+	const colWidthName = 50
+	const colWidthAction = 7
 	const colWidthResult = 50
 	str := fmt.Sprintf("%-*s %-*s %-*s", colWidthName, renderItem(i.name), colWidthAction, i.action, colWidthResult, renderItem(i.result))
 

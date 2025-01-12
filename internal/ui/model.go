@@ -127,7 +127,7 @@ func actionsToMap(actions []llm.Action) map[string]llm.Action {
 func InitModel(llm *llm.GeminiModel) model {
 	items := []list.Item{}
 
-	const defaultWidth = 30
+	const defaultWidth = 120
 	const listHeight = 30
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
