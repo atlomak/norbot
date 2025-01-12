@@ -60,6 +60,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Fatal(msg.err.Error())
 		}
+		for _, v := range msg.actions {
+			log.Println(v)
+		}
 		m.waiting = false
 		return m, nil
 	}

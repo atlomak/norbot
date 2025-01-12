@@ -14,7 +14,11 @@ const (
 	fileIcon = "\U0001F4C4"
 )
 
-type item string
+type item struct {
+	name   string
+	action string
+	result string
+}
 
 func (i item) FilterValue() string { return "" }
 
@@ -29,7 +33,10 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := renderItem(i)
+	const colWidthName = 30
+	const colWidthAction = 10
+	const colWidthResult = 50
+	str := fmt.Sprintf("%-*s %-*s %-*s", colWidthName, renderItem(i.name), colWidthAction, i.action, colWidthResult, renderItem(i.result))
 
 	fn := itemStyle.Render
 	if index == m.Index() {
@@ -41,13 +48,16 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fmt.Fprint(w, fn(str))
 }
 
-func renderItem(it item) string {
-	var b strings.Builder
-	s := string(it)
-	isDir := strings.HasSuffix(s, "/")
+func renderItem(file string) string {
+	if file == "" {
+		return file
+	}
 
-	path := strings.Split(strings.TrimSuffix(s, "/"), "/")
-	s = path[len(path)-1]
+	var b strings.Builder
+	isDir := strings.HasSuffix(file, "/")
+
+	path := strings.Split(strings.TrimSuffix(file, "/"), "/")
+	file = path[len(path)-1]
 
 	parents := len(path) - 1
 
@@ -61,10 +71,10 @@ func renderItem(it item) string {
 	}
 
 	if isDir {
-		b.WriteString(fmt.Sprintf("%s %s", dirIcon, s))
+		b.WriteString(fmt.Sprintf("%s %s", dirIcon, file))
 		return b.String()
 	}
-	b.WriteString(fmt.Sprintf("%s %s", fileIcon, s))
+	b.WriteString(fmt.Sprintf("%s %s", fileIcon, file))
 	return b.String()
 }
 

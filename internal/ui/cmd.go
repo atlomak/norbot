@@ -38,7 +38,7 @@ func filesToItems(files fsutils.FileList) []list.Item {
 	s = s[:len(s)-1] // because of newline at the end of string
 
 	for _, file := range s {
-		items = append(items, item(file))
+		items = append(items, item{name: file})
 	}
 	return items
 }
