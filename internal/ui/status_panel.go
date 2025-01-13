@@ -30,6 +30,14 @@ func (m model) welcomePanelView() string {
 	return s
 }
 
+func (m model) inputPanelView() string {
+	s := norbot
+	s += "\n"
+	s += bottomStatusStyle.Render(m.textInput.View())
+	s += "\n"
+	return s
+}
+
 func (m model) loadingPanelView() string {
 	s := norbot
 	s += "\n"

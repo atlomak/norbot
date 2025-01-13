@@ -7,6 +7,7 @@ import (
 	"github.com/atlomak/norbot/internal/llm"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -17,6 +18,7 @@ type model struct {
 	actions     map[string]llm.Action
 	llm         *llm.GeminiModel
 	maxDepth    int
+	textInput   textinput.Model
 	progress    progress.Model
 	progessDone bool
 	status      status
@@ -27,6 +29,7 @@ type status int
 
 const (
 	Started status = iota
+	Input
 	Waiting
 	Ready
 	Finished
@@ -43,29 +46,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetHeight(msg.Height - statusPanelStyle.GetHeight())
 		m.list.SetWidth(msg.Width)
 		return m, nil
-	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "q", "ctrl+c":
-			return m, tea.Quit
-		case "enter":
-			if m.status == Finished {
-				return m, tea.Quit
-			}
-			m.progessDone = false
-			m.status = Waiting
-			return m, m.startQuery(m.files, "")
-		case "y":
-			if m.status == Finished {
-				return m, tea.Quit
-			}
-			m.status = Finished
-			return m, m.applyChanges
-		case " ":
-			if m.status != Ready {
-				return m, nil
-			}
-			return m, tea.Sequence(m.toggleItem, m.sortItems)
-		}
 	case readDirMsg:
 		if msg.err != nil {
 			m.handleError(msg.err, msg)
@@ -101,12 +81,57 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
 		return m, cmd
+	case tea.KeyMsg:
+		if m.status == Input {
+			switch keypress := msg.String(); keypress {
+			case "q", "ctrl+c":
+				return m, tea.Quit
+			case "enter":
+				if m.status == Finished {
+					return m, tea.Quit
+				}
+				m.progessDone = false
+				m.status = Waiting
+				m.textInput.Blur()
+				return m, m.startQuery(m.files, m.textInput.Value())
+			}
+			var promptCmd tea.Cmd
+			m.textInput, promptCmd = m.textInput.Update(msg)
+			return m, promptCmd
+		}
+		switch keypress := msg.String(); keypress {
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		case "enter":
+			if m.status == Finished {
+				return m, tea.Quit
+			}
+			m.progessDone = false
+			m.status = Waiting
+			return m, m.startQuery(m.files, "")
+		case "y":
+			if m.status == Finished {
+				return m, tea.Quit
+			}
+			m.status = Finished
+			return m, m.applyChanges
+		case " ":
+			if m.status != Ready {
+				return m, nil
+			}
+			return m, tea.Sequence(m.toggleItem, m.sortItems)
+		case "p":
+			m.status = Input
+			m.textInput.Focus()
+			return m, nil
+		}
 	}
 
-	var listCmd, spinCmd tea.Cmd
+	var listCmd, promptCmd tea.Cmd
 
+	m.textInput, promptCmd = m.textInput.Update(msg)
 	m.list, listCmd = m.list.Update(msg)
-	return m, tea.Batch(spinCmd, listCmd)
+	return m, tea.Batch(promptCmd, listCmd)
 }
 
 func (m *model) handleError(err error, msg tea.Msg) {
@@ -120,6 +145,8 @@ func (m model) View() string {
 	switch m.status {
 	case Started:
 		statusPanel = m.welcomePanelView()
+	case Input:
+		statusPanel = m.inputPanelView()
 	case Waiting:
 		statusPanel = m.loadingPanelView()
 	case Ready:
@@ -167,7 +194,8 @@ func InitModel(llm *llm.GeminiModel) model {
 
 	progess := progress.New(progress.WithDefaultScaledGradient())
 	l := initList()
-	m := model{list: l, llm: llm, progress: progess, status: Started}
+	textInput := textinput.New()
+	m := model{list: l, llm: llm, progress: progess, status: Started, textInput: textInput}
 
 	return m
 }

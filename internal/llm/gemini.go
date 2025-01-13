@@ -3,6 +3,8 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"sort"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -40,6 +42,10 @@ Examples of actions:
    { "action": "move", "name": "old-file.txt", "result": "old_file.txt" }
 3. If a file is left in place, provide:
    { "action": "keep", "name": "example.conf", "result": "example.conf" }
+
+You should also consider additional instructions provided by the user after this prompt.
+These instructions might modify or extend your actions for organizing files and folders.
+Always prioritize user input if given, but you have to follow rules of schema, and remember about naming conventions.
 `
 
 	actionsDesciption = `
@@ -67,16 +73,17 @@ type Action struct {
 }
 
 type GeminiModel struct {
-	model  *genai.GenerativeModel
-	prompt string
-	ctx    context.Context
+	model *genai.GenerativeModel
+	ctx   context.Context
 }
 
 func (m GeminiModel) Query(files fsutils.FileList, prompt string) ([]Action, error) {
 	var resp *genai.GenerateContentResponse
 	var err error
 	if prompt != "" {
-		resp, err = m.model.GenerateContent(m.ctx, genai.Text(m.prompt), genai.Text(files.Details()))
+		log.Printf("given prompt: %s", prompt)
+		query := fmt.Sprintf("additional prompt:\n%s\ndata:\n%s", prompt, files.Details())
+		resp, err = m.model.GenerateContent(m.ctx, genai.Text(query))
 	} else {
 		resp, err = m.model.GenerateContent(m.ctx, genai.Text(files.Details()))
 	}
