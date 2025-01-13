@@ -5,6 +5,7 @@ import (
 
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -37,7 +38,7 @@ const (
 )
 
 func (m model) Init() tea.Cmd {
-	return readDir(".", 0)
+	return tea.Batch(readDir(".", 0), textinput.Blink)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -94,6 +95,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.status = Waiting
 				m.textInput.Blur()
 				return m, m.startQuery(m.files, m.textInput.Value())
+			case tea.KeyEsc.String():
+				m.status = Started
 			}
 			var promptCmd tea.Cmd
 			m.textInput, promptCmd = m.textInput.Update(msg)
@@ -163,9 +166,12 @@ func (m model) View() string {
 
 func InitModel(llm *llm.GeminiModel) model {
 
-	progess := progress.New(progress.WithDefaultScaledGradient())
+	progess := progress.New(progress.WithScaledGradient(darkGreen, gnomeGreen))
 	l := initList()
 	textInput := textinput.New()
+	textInput.Cursor.SetMode(cursor.CursorHide)
+	textInput.Prompt = " "
+	textInput.Placeholder = "Prompt Norbot..."
 	m := model{list: l, llm: llm, progress: progess, status: Started, textInput: textInput}
 
 	return m

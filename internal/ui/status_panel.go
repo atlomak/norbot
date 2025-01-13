@@ -7,10 +7,16 @@ import (
 var (
 	statusPanelStyle = lipgloss.NewStyle().
 				Width(120).
-				Height(8).
+				Height(10).
 				Align(lipgloss.Left, lipgloss.Top).
 				PaddingLeft(2)
-	bottomStatusStyle = lipgloss.NewStyle().MarginLeft(4)
+	statusTitleStyle  = lipgloss.NewStyle().MarginLeft(1).Foreground(lipgloss.Color(gnomeGreen))
+	bottomStatusStyle = lipgloss.NewStyle().Margin(2)
+	promptInputStyle  = lipgloss.NewStyle().
+				Width(80).
+				MarginLeft(2).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color(gnomeGreen))
 )
 
 const (
@@ -20,52 +26,44 @@ const (
   /    / / /_/ / / , _/ / _  |/ /_/ / / /   
  /_/|_/  \____/ /_/|_| /____/ \____/ /_/      
 `
+	gnomeGreen = "#39FF14"
+	darkGreen  = "#243407"
 )
 
 func (m model) welcomePanelView() string {
-	s := norbot
-	s += "\n"
+	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render("Press enter to unleash the gnomes...")
-	s += "\n"
 	return s
 }
 
 func (m model) inputPanelView() string {
-	s := norbot
+	s := statusTitleStyle.Render(norbot)
 	s += "\n"
-	s += bottomStatusStyle.Render(m.textInput.View())
+	s += promptInputStyle.Render(m.textInput.View())
 	s += "\n"
 	return s
 }
 
 func (m model) loadingPanelView() string {
-	s := norbot
-	s += "\n"
+	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render(m.progress.View())
-	s += "\n"
 	return s
 }
 
 func (m model) readyPanelView() string {
-	s := norbot
-	s += "\n"
+	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render("Press y to apply Norbot changes. Press space to reject selected file.")
-	s += "\n"
 	return s
 }
 
 func (m model) finishPanelView() string {
-	s := norbot
-	s += "\n"
+	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render("Norbot finished. Bowing. More bowing")
-	s += "\n"
 	return s
 }
 
 func (m model) errorPanelView() string {
 	s := norbot
-	s += "\n"
 	s += bottomStatusStyle.Render("Norbot encountered an error! Geez...")
-	s += "\n"
 	return s
 }
