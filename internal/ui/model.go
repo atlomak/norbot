@@ -189,7 +189,13 @@ func (m model) filesToItems(files fsutils.FileList) []list.Item {
 }
 
 func (m model) toggleItemAction(it item) list.Item {
+	log.Printf("toggleItem: %v\n", it)
 	if it.rejected {
+		if it.name == "" {
+			it.action = "create"
+			it.rejected = false
+			return it
+		}
 		if action, exists := m.actions[it.name]; exists {
 			it.action = action.Type
 			it.result = action.Result
@@ -197,8 +203,15 @@ func (m model) toggleItemAction(it item) list.Item {
 		}
 		return it
 	}
-	it.action = "keep"
-	it.result = it.name
+	if it.action == "keep" {
+		return it
+	}
+	if it.name != "" {
+		it.result = it.name
+		it.action = "keep"
+	} else {
+		it.action = "!create"
+	}
 	it.rejected = true
 	return it
 }

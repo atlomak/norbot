@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	dirIcon  = "\U0001F4C1"
-	fileIcon = "\U0001F4C4"
-	newFile  = "\U00002728"
+	dirIcon        = "\U0001F4C1"
+	fileIcon       = "\U0001F4C4"
+	newFile        = "\U00002728"
+	colWidthName   = 40
+	colWidthAction = 10
 )
 
 var (
@@ -45,14 +47,15 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	const colWidthName = 40
-	const colWidthAction = 10
-
 	var str string
-	if i.name == "" {
-		str = fmt.Sprintf("%-*s %-*s %s", colWidthName, newFile, colWidthAction, i.action, renderItem(i.result))
+	name := i.name
+	if name == "" {
+		str = fmt.Sprintf("%-*s %-*s %s", colWidthName+15, newFile, colWidthAction, i.action, renderItem(i.result))
 	} else {
-		str = fmt.Sprintf("%-*s %-*s %s", colWidthName, renderItem(i.name), colWidthAction, i.action, renderItem(i.result))
+		if len(name) > colWidthName {
+			name = trimName(name)
+		}
+		str = fmt.Sprintf("%-*s %-*s %s", colWidthName+15, renderItem(name), colWidthAction, i.action, renderItem(i.result))
 	}
 
 	fn := itemStyle.Render
@@ -67,6 +70,12 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	}
 
 	fmt.Fprint(w, fn(str))
+}
+
+func trimName(name string) string {
+	r := []rune(name)
+	trunc := r[:colWidthName-4]
+	return string(trunc) + "..."
 }
 
 func renderItem(file string) string {
