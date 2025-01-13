@@ -6,7 +6,8 @@
 Your little assistant for folder upkeeping.
 ```
 ## Usage
-Run the Norbot in the folder you would like to clean a bit.\
+Set `GEMINI_API_KEY` environment variable with your api key,\
+then run the `Norbot` in the folder you would like to clean a bit.\
 After pressing enter, he will come up with an idea how to organize your files.
 
 ![](gif/norbot_demo.gif)
