@@ -65,11 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.status != Ready {
 				return m, nil
 			}
-			selected := m.list.SelectedItem().(item)
-			toggled := m.toggleItemAction(selected)
-			idx := m.list.Index()
-			itemCmd := m.list.SetItem(idx, toggled)
-			return m, tea.Sequence(itemCmd, m.sortItems)
+			return m, tea.Sequence(m.toggleItem, m.sortItems)
 		}
 	case readDirMsg:
 		if msg.err != nil {

@@ -50,8 +50,15 @@ func (m model) queryResult(files fsutils.FileList, prompt string) tea.Cmd {
 func (m *model) startQuery(files fsutils.FileList, prompt string) tea.Cmd {
 	progressMsg := m.progress.SetPercent(0)
 	tickCmd := tickCmd()
-	queryCmd := m.queryResult(m.files, prompt)
+	queryCmd := m.queryResult(files, prompt)
 	return tea.Sequence(progressMsg, tickCmd, queryCmd)
+}
+
+func (m *model) toggleItem() tea.Msg {
+	selected := m.list.SelectedItem().(item)
+	toggled := m.toggleItemAction(selected)
+	idx := m.list.Index()
+	return m.list.SetItem(idx, toggled)
 }
 
 func (m model) applyChanges() tea.Msg {
