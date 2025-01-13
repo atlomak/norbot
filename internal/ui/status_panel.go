@@ -41,7 +41,7 @@ func (m model) loadingPanelView() string {
 func (m model) readyPanelView() string {
 	s := norbot
 	s += "\n"
-	s += bottomStatusStyle.Render("Press y to apply Norbot changes")
+	s += bottomStatusStyle.Render("Press y to apply Norbot changes. Press space to reject selected file.")
 	s += "\n"
 	return s
 }
