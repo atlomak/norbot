@@ -121,9 +121,9 @@ func (m model) View() string {
 		statusPanel = m.finishPanelView()
 	case Error:
 		statusPanel = m.errorPanelView()
-		return lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), focused.Render(m.err.Error()))
+		return lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), m.err.Error())
 	}
-	s := lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), focused.Render(m.list.View()))
+	s := lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), m.list.View())
 	return s
 }
 

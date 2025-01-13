@@ -43,7 +43,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	const colWidthName = 20
+	const colWidthName = 40
 	const colWidthAction = 10
 
 	var str string

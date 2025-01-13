@@ -10,13 +10,13 @@ var (
 				Height(8).
 				Align(lipgloss.Left, lipgloss.Top).
 				PaddingLeft(2)
-		// BorderStyle(lipgloss.NormalBorder()).
-		// BorderForeground(lipgloss.Color("69"))
-	focused = lipgloss.NewStyle().
-		Width(80).
-		Align(lipgloss.Left, lipgloss.Top)
-		// BorderStyle(lipgloss.NormalBorder()).
-		// BorderForeground(lipgloss.Color("69"))
+	// BorderStyle(lipgloss.NormalBorder()).
+	// BorderForeground(lipgloss.Color("69"))
+	// focused = lipgloss.NewStyle().
+	// 	Width(80).
+	// 	Align(lipgloss.Left, lipgloss.Top)
+	// 	// BorderStyle(lipgloss.NormalBorder()).
+	// 	// BorderForeground(lipgloss.Color("69"))
 	bottomStatusStyle = lipgloss.NewStyle().MarginLeft(4)
 )
 
