@@ -116,6 +116,35 @@ func (m *model) updateResults(actions []llm.Action) tea.Cmd {
 	return m.list.SetItems(m.resultsToItems(m.actions))
 }
 
+func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
+	items := m.filesToItems(m.files)
+	remaining := make(map[string]llm.Action)
+	for k, v := range actions {
+		remaining[k] = v
+	}
+
+	for i, listItem := range items {
+		fileItem := listItem.(item)
+		if action, exists := remaining[fileItem.name]; exists {
+			fileItem.action = action.Type
+			fileItem.result = action.Result
+			items[i] = fileItem
+			delete(remaining, fileItem.name)
+		}
+	}
+
+	for _, remainingAction := range remaining {
+		log.Printf("add create actions: %s", remainingAction)
+		newItem := item{
+			action: remainingAction.Type,
+			result: remainingAction.Result,
+		}
+		items = append(items, newItem)
+	}
+
+	return items
+}
+
 func actionsToMap(actions []llm.Action) map[string]llm.Action {
 	result := make(map[string]llm.Action)
 	for _, action := range actions {

@@ -161,35 +161,6 @@ func (m model) View() string {
 	return s
 }
 
-func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
-	items := m.filesToItems(m.files)
-	remaining := make(map[string]llm.Action)
-	for k, v := range actions {
-		remaining[k] = v
-	}
-
-	for index, listItem := range items {
-		fileItem := listItem.(item)
-		if action, exists := remaining[fileItem.name]; exists {
-			fileItem.action = action.Type
-			fileItem.result = action.Result
-			items[index] = fileItem
-			delete(remaining, fileItem.name)
-		}
-	}
-
-	for _, remainingAction := range remaining {
-		log.Printf("add create actions: %s", remainingAction)
-		newItem := item{
-			action: remainingAction.Type,
-			result: remainingAction.Result,
-		}
-		items = append(items, newItem)
-	}
-
-	return items
-}
-
 func InitModel(llm *llm.GeminiModel) model {
 
 	progess := progress.New(progress.WithDefaultScaledGradient())
