@@ -5,6 +5,14 @@
  /_/|_/  \____/ /_/|_| /____/ \____/ /_/     
 Your little assistant for folder upkeeping.
 ```
+
+## Building from source
+### Prerequisites
+    Golang >= 1.23
+```
+go build ./cmd/norbot
+```
+
 ## Usage
 Set `GEMINI_API_KEY` environment variable with your api key,\
 then run the `Norbot` in the folder you would like to clean a bit.\
