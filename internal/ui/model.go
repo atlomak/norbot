@@ -8,7 +8,7 @@ import (
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -18,14 +18,24 @@ type model struct {
 	files    fsutils.FileList
 	actions  map[string]llm.Action
 	llm      *llm.GeminiModel
-	spinner  spinner.Model
-	waiting  bool
-	ready    bool
 	maxDepth int
+	progress progress.Model
+	status   status
+	err      error
 }
 
+type status int
+
+const (
+	Started status = iota
+	Waiting
+	Ready
+	Finished
+	Error
+)
+
 func (m model) Init() tea.Cmd {
-	return tea.Batch(readDir(".", 0), m.spinner.Tick)
+	return readDir(".", 0)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -33,22 +43,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.list.SetWidth(msg.Width)
 		return m, nil
-
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			m.waiting = true
+			m.status = Waiting
+			tickCmd := tickCmd()
 			queryCmd := m.queryResult(m.files)
-			return m, queryCmd
+			return m, tea.Batch(tickCmd, queryCmd)
 		case "y":
-			m.actions = nil
+			m.status = Finished
 			return m, m.applyChanges
 		}
 	case readDirMsg:
 		if msg.err != nil {
-			log.Fatal(msg.err.Error())
+			m.status = Error
+			m.err = msg.err
+			log.Println(msg.err.Error())
+			return m, nil
 		}
 		m.files = msg.files
 		items := filesToItems(m.files)
@@ -56,35 +69,61 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case queryResultMsg:
 		if msg.err != nil {
-			log.Fatal(msg.err.Error())
+			m.status = Error
+			m.err = msg.err
+			log.Println(msg.err.Error())
+			return m, nil
 		}
 		m.maxDepth = maxDepth(msg.actions)
 		m.actions = actionsToMap(msg.actions)
 		cmd := m.list.SetItems(m.resultsToItems(m.actions))
-		m.waiting = false
-		m.ready = true
+
+		m.status = Ready
 		return m, cmd
 	case applyChangesMsg:
 		if msg.err != nil {
-			log.Fatal(msg.err.Error())
+			m.status = Error
+			m.err = msg.err
+			log.Println(msg.err.Error())
+			return m, nil
 		}
 		return m, readDir(".", m.maxDepth)
+	case tickMsg:
+		if m.progress.Percent() == 1.0 && m.status == Ready {
+			cmd := m.progress.SetPercent(0)
+			return m, cmd
+		}
+
+		cmd := m.progress.IncrPercent(0.30)
+		return m, tea.Batch(tickCmd(), cmd)
+	case progress.FrameMsg:
+		progressModel, cmd := m.progress.Update(msg)
+		m.progress = progressModel.(progress.Model)
+		return m, cmd
 	}
 
 	var listCmd, spinCmd tea.Cmd
 
-	m.spinner, spinCmd = m.spinner.Update(msg)
 	m.list, listCmd = m.list.Update(msg)
 	return m, tea.Batch(spinCmd, listCmd)
 }
 
 func (m model) View() string {
-	var s string
-	// if m.waiting {
-	// 	s += m.spinner.View()
-	// }
-	s += lipgloss.JoinVertical(lipgloss.Top, "Hello panel/n", m.list.View())
-	// s += "\n" + m.list.View()
+	var statusPanel string
+	switch m.status {
+	case Started:
+		statusPanel = m.welcomePanelView()
+	case Waiting:
+		statusPanel = m.loadingPanelView()
+	case Ready:
+		statusPanel = m.readyPanelView()
+	case Finished:
+		statusPanel = m.finishPanelView()
+	case Error:
+		statusPanel = m.errorPanelView()
+		return lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), focused.Render(m.err.Error()))
+	}
+	s := lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), focused.Render(m.list.View()))
 	return s
 }
 
@@ -157,11 +196,9 @@ func maxDepth(actions []llm.Action) int {
 
 func InitModel(llm *llm.GeminiModel) model {
 
-	spin := spinner.New()
-	spin.Spinner = spinner.Pulse
-
+	progess := progress.New(progress.WithDefaultScaledGradient())
 	l := initList()
-	m := model{list: l, llm: llm, spinner: spin}
+	m := model{list: l, llm: llm, progress: progess, status: Started}
 
 	return m
 }

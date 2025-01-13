@@ -43,7 +43,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	const colWidthName = 50
+	const colWidthName = 20
 	const colWidthAction = 10
 
 	var str string
@@ -97,12 +97,14 @@ func initList() list.Model {
 	items := []list.Item{}
 
 	const defaultWidth = 120
-	const listHeight = 30
+	const listHeight = 20
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Files"
+	// l.Title = "Files"
+	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
+	l.SetShowHelp(true)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle

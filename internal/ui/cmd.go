@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,6 +21,8 @@ type queryResultMsg struct {
 type applyChangesMsg struct {
 	err error
 }
+
+type tickMsg time.Time
 
 func readDir(root string, depth int) tea.Cmd {
 	return func() tea.Msg {
@@ -55,4 +59,10 @@ func (m model) applyChanges() tea.Msg {
 		}
 	}
 	return applyChangesMsg{err: err}
+}
+
+func tickCmd() tea.Cmd {
+	return tea.Tick(time.Second*1, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
 }
