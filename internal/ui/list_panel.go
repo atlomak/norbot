@@ -20,14 +20,16 @@ var (
 	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	rejectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("#FF6347"))
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 )
 
 type item struct {
-	name   string
-	action string
-	result string
+	rejected bool
+	name     string
+	action   string
+	result   string
 }
 
 func (i item) FilterValue() string { return "" }
@@ -57,6 +59,10 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	if index == m.Index() {
 		fn = func(s ...string) string {
 			return selectedItemStyle.Render("> " + strings.Join(s, " "))
+		}
+	} else if i.rejected {
+		fn = func(s ...string) string {
+			return rejectedItemStyle.Render("x " + strings.Join(s, " "))
 		}
 	}
 
@@ -97,7 +103,7 @@ func initList() list.Model {
 	items := []list.Item{}
 
 	const defaultWidth = 120
-	const listHeight = 20
+	const listHeight = 30
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	// l.Title = "Files"

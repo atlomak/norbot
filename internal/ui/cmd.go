@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"sort"
 	"time"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -59,6 +60,16 @@ func (m model) applyChanges() tea.Msg {
 		}
 	}
 	return applyChangesMsg{err: err}
+}
+
+func (m model) sortItems() tea.Msg {
+	items := m.list.Items()
+	sort.Slice(items, func(i, j int) bool {
+		itemA := items[i].(item)
+		itemB := items[j].(item)
+		return itemA.result <= itemB.result
+	})
+	return m.list.SetItems(items)
 }
 
 func tickCmd() tea.Cmd {

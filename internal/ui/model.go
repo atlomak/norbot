@@ -2,7 +2,6 @@ package ui
 
 import (
 	"log"
-	"sort"
 	"strings"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -61,6 +60,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.status = Finished
 			return m, m.applyChanges
+		case " ":
+			if m.status != Ready {
+				return m, nil
+			}
+			selected := m.list.SelectedItem().(item)
+			toggled := m.toggleItemAction(selected)
+			idx := m.list.Index()
+			itemCmd := m.list.SetItem(idx, toggled)
+			return m, tea.Sequence(itemCmd, m.sortItems)
 		}
 	case readDirMsg:
 		if msg.err != nil {
@@ -70,7 +78,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.files = msg.files
-		items := filesToItems(m.files)
+		items := m.filesToItems(m.files)
 		cmd := m.list.SetItems(items)
 		return m, cmd
 	case queryResultMsg:
@@ -85,7 +93,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd := m.list.SetItems(m.resultsToItems(m.actions))
 
 		m.status = Ready
-		return m, cmd
+		return m, tea.Batch(cmd, m.sortItems)
 	case applyChangesMsg:
 		if msg.err != nil {
 			m.status = Error
@@ -133,19 +141,24 @@ func (m model) View() string {
 	return s
 }
 
-func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
-	items := filesToItems(m.files)
+func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
+	items := m.filesToItems(m.files)
+	remaining := make(map[string]llm.Action)
+	for k, v := range actions {
+		remaining[k] = v
+	}
+
 	for index, listItem := range items {
 		fileItem := listItem.(item)
-		if action, exists := actionResults[fileItem.name]; exists {
+		if action, exists := remaining[fileItem.name]; exists {
 			fileItem.action = action.Type
 			fileItem.result = action.Result
 			items[index] = fileItem
-			delete(actionResults, fileItem.name)
+			delete(remaining, fileItem.name)
 		}
 	}
 
-	for _, remainingAction := range actionResults {
+	for _, remainingAction := range remaining {
 		log.Printf("add create actions: %s", remainingAction)
 		newItem := item{
 			action: remainingAction.Type,
@@ -154,16 +167,10 @@ func (m model) resultsToItems(actionResults map[string]llm.Action) []list.Item {
 		items = append(items, newItem)
 	}
 
-	sort.Slice(items, func(i, j int) bool {
-		itemA := items[i].(item)
-		itemB := items[j].(item)
-		return itemA.result <= itemB.result
-	})
-
 	return items
 }
 
-func filesToItems(files fsutils.FileList) []list.Item {
+func (m model) filesToItems(files fsutils.FileList) []list.Item {
 	items := make([]list.Item, 0, len(files))
 
 	s := strings.Split(files.String(), "\n")
@@ -173,6 +180,21 @@ func filesToItems(files fsutils.FileList) []list.Item {
 		items = append(items, item{name: file})
 	}
 	return items
+}
+
+func (m model) toggleItemAction(it item) list.Item {
+	if it.rejected {
+		if action, exists := m.actions[it.name]; exists {
+			it.action = action.Type
+			it.result = action.Result
+			it.rejected = false
+		}
+		return it
+	}
+	it.action = "keep"
+	it.result = it.name
+	it.rejected = true
+	return it
 }
 
 func actionsToMap(actions []llm.Action) map[string]llm.Action {
