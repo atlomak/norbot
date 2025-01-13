@@ -100,7 +100,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
-		cmd := m.progress.IncrPercent(0.30)
+		cmd := m.progress.IncrPercent(0.08)
 		return m, tea.Batch(tickCmd(), cmd)
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)

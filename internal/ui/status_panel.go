@@ -32,6 +32,7 @@ const (
 func (m model) welcomePanelView() string {
 	s := norbot
 	s += "\n"
+	s += bottomStatusStyle.Render("Press enter to unleash the gnomes...")
 	s += "\n"
 	return s
 }
@@ -55,7 +56,7 @@ func (m model) readyPanelView() string {
 func (m model) finishPanelView() string {
 	s := norbot
 	s += "\n"
-	s += bottomStatusStyle.Render("Norbot finished. No job is too little!")
+	s += bottomStatusStyle.Render("Norbot finished. Bowing. More bowing")
 	s += "\n"
 	return s
 }
