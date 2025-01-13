@@ -14,7 +14,8 @@ go build ./cmd/norbot
 ```
 
 ## Usage
-Set `GEMINI_API_KEY` environment variable with your api key,\
+Set `GEMINI_API_KEY` environment variable with your api key
+(you can get it [here](https://aistudio.google.com/app/apikey)),\
 then run the `Norbot` in the folder you would like to clean a bit.\
 After pressing `enter`, he will come up with an idea how to organize your files.\
 Like what you see? Press `y` to let Norbot clean up.
