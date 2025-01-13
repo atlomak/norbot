@@ -8,7 +8,7 @@ Your little assistant for folder upkeeping.
 
 ## Building from source
 ### Prerequisites
-    Golang >= 1.23
+ - Golang >= 1.23
 ```
 go build ./cmd/norbot
 ```
