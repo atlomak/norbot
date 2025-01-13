@@ -41,6 +41,7 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		m.list.SetHeight(msg.Height - statusPanelStyle.GetHeight())
 		m.list.SetWidth(msg.Width)
 		return m, nil
 	case tea.KeyMsg:
@@ -141,9 +142,9 @@ func (m model) View() string {
 		statusPanel = m.finishPanelView()
 	case Error:
 		statusPanel = m.errorPanelView()
-		return lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), m.err.Error())
+		return lipgloss.JoinVertical(lipgloss.Top, statusPanelStyle.Render(statusPanel), m.err.Error())
 	}
-	s := lipgloss.JoinVertical(lipgloss.Top, focusedModelStyle.Render(statusPanel), m.list.View())
+	s := lipgloss.JoinVertical(lipgloss.Top, statusPanelStyle.Render(statusPanel), m.list.View())
 	return s
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	focusedModelStyle = lipgloss.NewStyle().
+	statusPanelStyle = lipgloss.NewStyle().
 				Width(120).
 				Height(8).
 				Align(lipgloss.Left, lipgloss.Top).
