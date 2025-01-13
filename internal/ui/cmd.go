@@ -37,14 +37,21 @@ func readDir(root string, depth int) tea.Cmd {
 	}
 }
 
-func (m model) queryResult(files fsutils.FileList) tea.Cmd {
+func (m model) queryResult(files fsutils.FileList, prompt string) tea.Cmd {
 	return func() tea.Msg {
-		actions, err := m.llm.Query(files, "")
+		actions, err := m.llm.Query(files, prompt)
 		if err != nil {
 			return queryResultMsg{err: err}
 		}
 		return queryResultMsg{actions: actions, err: nil}
 	}
+}
+
+func (m *model) startQuery(files fsutils.FileList, prompt string) tea.Cmd {
+	progressMsg := m.progress.SetPercent(0)
+	tickCmd := tickCmd()
+	queryCmd := m.queryResult(m.files, prompt)
+	return tea.Sequence(progressMsg, tickCmd, queryCmd)
 }
 
 func (m model) applyChanges() tea.Msg {

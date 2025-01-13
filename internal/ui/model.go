@@ -52,12 +52,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.status == Finished {
 				return m, tea.Quit
 			}
-			m.status = Waiting
-			progressMsg := m.progress.SetPercent(0)
 			m.progessDone = false
-			tickCmd := tickCmd()
-			queryCmd := m.queryResult(m.files)
-			return m, tea.Sequence(progressMsg, tickCmd, queryCmd)
+			m.status = Waiting
+			return m, m.startQuery(m.files, "")
 		case "y":
 			if m.status == Finished {
 				return m, tea.Quit
