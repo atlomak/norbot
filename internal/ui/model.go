@@ -2,7 +2,6 @@ package ui
 
 import (
 	"log"
-	"strings"
 
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
@@ -74,10 +73,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Println(msg.err.Error())
 			return m, nil
 		}
-		m.files = msg.files
-		items := m.filesToItems(m.files)
-		cmd := m.list.SetItems(items)
-		return m, cmd
+		return m, m.setItems(msg.files)
 	case queryResultMsg:
 		if msg.err != nil {
 			m.status = Error
@@ -85,12 +81,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Println(msg.err.Error())
 			return m, nil
 		}
-		m.maxDepth = maxDepth(msg.actions)
-		m.actions = actionsToMap(msg.actions)
-		cmd := m.list.SetItems(m.resultsToItems(m.actions))
-
 		m.progessDone = true
-		return m, tea.Batch(cmd, m.sortItems)
+		updateResults := m.updateResults(msg.actions)
+		return m, tea.Batch(updateResults, m.sortItems)
 	case applyChangesMsg:
 		if msg.err != nil {
 			m.status = Error
@@ -168,71 +161,6 @@ func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
 	}
 
 	return items
-}
-
-func (m model) filesToItems(files fsutils.FileList) []list.Item {
-	items := make([]list.Item, 0, len(files))
-
-	s := strings.Split(files.String(), "\n")
-	s = s[:len(s)-1] // because of newline at the end of string
-
-	for _, file := range s {
-		items = append(items, item{name: file})
-	}
-	return items
-}
-
-func (m model) toggleItemAction(it item) list.Item {
-	log.Printf("toggleItem: %v\n", it)
-	if it.rejected {
-		if it.name == "" {
-			it.action = "create"
-			it.rejected = false
-			return it
-		}
-		if action, exists := m.actions[it.name]; exists {
-			it.action = action.Type
-			it.result = action.Result
-			it.rejected = false
-		}
-		return it
-	}
-	if it.action == "keep" {
-		return it
-	}
-	if it.name != "" {
-		it.result = it.name
-		it.action = "keep"
-	} else {
-		it.action = "!create"
-	}
-	it.rejected = true
-	return it
-}
-
-func actionsToMap(actions []llm.Action) map[string]llm.Action {
-	result := make(map[string]llm.Action)
-	for _, action := range actions {
-		log.Println(action)
-		if action.Name == "" {
-			result[action.Result] = action
-		} else {
-			result[action.Name] = action
-		}
-	}
-	return result
-}
-
-func maxDepth(actions []llm.Action) int {
-	maxDepth := 0
-	for _, action := range actions {
-		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
-		parents := len(path) - 1
-		if parents > maxDepth {
-			maxDepth = parents
-		}
-	}
-	return maxDepth
 }
 
 func InitModel(llm *llm.GeminiModel) model {

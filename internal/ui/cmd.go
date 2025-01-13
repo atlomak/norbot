@@ -1,11 +1,14 @@
 package ui
 
 import (
+	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/atlomak/norbot/internal/fsutils"
 	"github.com/atlomak/norbot/internal/llm"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -59,6 +62,83 @@ func (m *model) toggleItem() tea.Msg {
 	toggled := m.toggleItemAction(selected)
 	idx := m.list.Index()
 	return m.list.SetItem(idx, toggled)
+}
+
+func (m model) toggleItemAction(it item) list.Item {
+	log.Printf("toggleItem: %v\n", it)
+	if it.rejected {
+		if it.name == "" {
+			it.action = "create"
+			it.rejected = false
+			return it
+		}
+		if action, exists := m.actions[it.name]; exists {
+			it.action = action.Type
+			it.result = action.Result
+			it.rejected = false
+		}
+		return it
+	}
+	if it.action == "keep" {
+		return it
+	}
+	if it.name != "" {
+		it.result = it.name
+		it.action = "keep"
+	} else {
+		it.action = "!create"
+	}
+	it.rejected = true
+	return it
+}
+
+func (m *model) setItems(files fsutils.FileList) tea.Cmd {
+	m.files = files
+	items := m.filesToItems(m.files)
+	return m.list.SetItems(items)
+}
+
+func (m model) filesToItems(files fsutils.FileList) []list.Item {
+	items := make([]list.Item, 0, len(files))
+
+	s := strings.Split(files.String(), "\n")
+	s = s[:len(s)-1] // because of newline at the end of string
+
+	for _, file := range s {
+		items = append(items, item{name: file})
+	}
+	return items
+}
+
+func (m *model) updateResults(actions []llm.Action) tea.Cmd {
+	m.maxDepth = maxDepth(actions)
+	m.actions = actionsToMap(actions)
+	return m.list.SetItems(m.resultsToItems(m.actions))
+}
+
+func actionsToMap(actions []llm.Action) map[string]llm.Action {
+	result := make(map[string]llm.Action)
+	for _, action := range actions {
+		log.Println(action)
+		if action.Name == "" {
+			result[action.Result] = action
+		} else {
+			result[action.Name] = action
+		}
+	}
+	return result
+}
+
+func maxDepth(actions []llm.Action) int {
+	maxDepth := 0
+	for _, action := range actions {
+		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
+		parents := len(path) - 1
+		if parents > maxDepth {
+			maxDepth = parents
+		}
+	}
+	return maxDepth
 }
 
 func (m model) applyChanges() tea.Msg {
