@@ -68,17 +68,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case readDirMsg:
 		if msg.err != nil {
-			m.status = Error
-			m.err = msg.err
-			log.Println(msg.err.Error())
+			m.handleError(msg.err, msg)
 			return m, nil
 		}
 		return m, m.setItems(msg.files)
 	case queryResultMsg:
 		if msg.err != nil {
-			m.status = Error
-			m.err = msg.err
-			log.Println(msg.err.Error())
+			m.handleError(msg.err, msg)
 			return m, nil
 		}
 		m.progessDone = true
@@ -86,9 +82,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(updateResults, m.sortItems)
 	case applyChangesMsg:
 		if msg.err != nil {
-			m.status = Error
-			m.err = msg.err
-			log.Println(msg.err.Error())
+			m.handleError(msg.err, msg)
 			return m, nil
 		}
 		return m, readDir(".", m.maxDepth)
@@ -113,6 +107,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.list, listCmd = m.list.Update(msg)
 	return m, tea.Batch(spinCmd, listCmd)
+}
+
+func (m *model) handleError(err error, msg tea.Msg) {
+	m.status = Error
+	m.err = err
+	log.Printf("msg: %T returned error: %s", msg, err.Error())
 }
 
 func (m model) View() string {
