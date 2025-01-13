@@ -169,7 +169,7 @@ func InitModel(llm *llm.GeminiModel) model {
 	progess := progress.New(progress.WithScaledGradient(darkGreen, gnomeGreen))
 	l := initList()
 	textInput := textinput.New()
-	textInput.Cursor.SetMode(cursor.CursorHide)
+	textInput.Cursor.SetMode(cursor.CursorBlink)
 	textInput.Prompt = " "
 	textInput.Placeholder = "Prompt Norbot..."
 	m := model{list: l, llm: llm, progress: progess, status: Started, textInput: textInput}
