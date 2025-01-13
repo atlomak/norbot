@@ -17,7 +17,7 @@ go build ./cmd/norbot
 Set `GEMINI_API_KEY` environment variable with your api key,\
 then run the `Norbot` in the folder you would like to clean a bit.\
 After pressing `enter`, he will come up with an idea how to organize your files.\
-Like what you see? Press y to let Norbot clean up.
+Like what you see? Press `y` to let Norbot clean up.
 Not a fan? Well, have fun losing your mind doing it manually...
 
 ![](gif/norbot_demo.gif)
