@@ -13,14 +13,15 @@ import (
 )
 
 type model struct {
-	list     list.Model
-	files    fsutils.FileList
-	actions  map[string]llm.Action
-	llm      *llm.GeminiModel
-	maxDepth int
-	progress progress.Model
-	status   status
-	err      error
+	list        list.Model
+	files       fsutils.FileList
+	actions     map[string]llm.Action
+	llm         *llm.GeminiModel
+	maxDepth    int
+	progress    progress.Model
+	progessDone bool
+	status      status
+	err         error
 }
 
 type status int
@@ -51,9 +52,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 			m.status = Waiting
+			progressMsg := m.progress.SetPercent(0)
+			m.progessDone = false
 			tickCmd := tickCmd()
 			queryCmd := m.queryResult(m.files)
-			return m, tea.Batch(tickCmd, queryCmd)
+			return m, tea.Sequence(progressMsg, tickCmd, queryCmd)
 		case "y":
 			if m.status == Finished {
 				return m, tea.Quit
@@ -92,7 +95,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.actions = actionsToMap(msg.actions)
 		cmd := m.list.SetItems(m.resultsToItems(m.actions))
 
-		m.status = Ready
+		m.progessDone = true
 		return m, tea.Batch(cmd, m.sortItems)
 	case applyChangesMsg:
 		if msg.err != nil {
@@ -103,13 +106,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, readDir(".", m.maxDepth)
 	case tickMsg:
-		if m.progress.Percent() == 1.0 && m.status == Ready {
-			cmd := m.progress.SetPercent(0)
-			return m, cmd
+		if m.progessDone && m.progress.Percent() < 1.0 {
+			cmd := m.progress.SetPercent(1.0)
+			return m, tea.Sequence(cmd, tickCmd())
+		} else if m.progessDone {
+			m.status = Ready
+			return m, nil
 		}
 
-		cmd := m.progress.IncrPercent(0.08)
-		return m, tea.Batch(tickCmd(), cmd)
+		cmd := m.progress.IncrPercent(0.03)
+		return m, tea.Sequence(cmd, tickCmd())
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)

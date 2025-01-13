@@ -73,7 +73,7 @@ func (m model) sortItems() tea.Msg {
 }
 
 func tickCmd() tea.Cmd {
-	return tea.Tick(time.Second*1, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond*400, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
 }
