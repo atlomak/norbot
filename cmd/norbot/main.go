@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -27,6 +28,8 @@ func main() {
 			os.Exit(1)
 		}
 		defer f.Close()
+	} else {
+		log.SetOutput(io.Discard)
 	}
 
 	p := tea.NewProgram(tui.InitModel(client, ctx))
