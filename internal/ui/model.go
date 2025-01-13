@@ -48,11 +48,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
+			if m.status == Finished {
+				return m, tea.Quit
+			}
 			m.status = Waiting
 			tickCmd := tickCmd()
 			queryCmd := m.queryResult(m.files)
 			return m, tea.Batch(tickCmd, queryCmd)
 		case "y":
+			if m.status == Finished {
+				return m, tea.Quit
+			}
 			m.status = Finished
 			return m, m.applyChanges
 		}
