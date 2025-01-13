@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -108,6 +109,23 @@ func renderItem(file string) string {
 	return b.String()
 }
 
+func newKeyMap() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(
+			key.WithKeys("p"),
+			key.WithHelp("p", "Write prompt to Norbot"),
+		),
+		key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Let the Norbot think..."),
+		),
+		key.NewBinding(
+			key.WithKeys("space"),
+			key.WithHelp("space", "Reject file modification"),
+		),
+	}
+}
+
 func initList() list.Model {
 	items := []list.Item{}
 
@@ -123,6 +141,7 @@ func initList() list.Model {
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
+	l.AdditionalFullHelpKeys = newKeyMap
 
 	return l
 }
