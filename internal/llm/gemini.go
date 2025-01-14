@@ -14,6 +14,8 @@ import (
 const (
 	query string = `
 You are an assistant helping to clean and organize directories efficiently. 
+Each file provided is in format:
+"size modification-date name"
 For each file or directory in the provided list, determine an appropriate action:
 - Move files to new directories to group them by type, date, name etc.
 - Leave system or configuration files (e.g., hidden files, .log, .conf) in their current locations.
