@@ -130,10 +130,16 @@ func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
 			fileItem.result = action.Result
 			items[i] = fileItem
 			delete(remaining, fileItem.name)
+		} else {
+			fileItem.action = "keep"
+			fileItem.result = fileItem.name
 		}
 	}
 
 	for _, remainingAction := range remaining {
+		if remainingAction.Type != "create" {
+			continue
+		}
 		log.Printf("add create actions: %s", remainingAction)
 		newItem := item{
 			action: remainingAction.Type,
