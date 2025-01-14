@@ -3,7 +3,6 @@ package ui
 import (
 	"log"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/atlomak/norbot/internal/fsutils"
@@ -94,20 +93,8 @@ func (m model) toggleItemAction(it item) list.Item {
 
 func (m *model) setItems(files fsutils.FileList) tea.Cmd {
 	m.files = files
-	items := m.filesToItems(m.files)
+	items := filesToItems(m.files)
 	return m.list.SetItems(items)
-}
-
-func (m model) filesToItems(files fsutils.FileList) []list.Item {
-	items := make([]list.Item, 0, len(files))
-
-	s := strings.Split(files.String(), "\n")
-	s = s[:len(s)-1] // because of newline at the end of string
-
-	for _, file := range s {
-		items = append(items, item{name: file})
-	}
-	return items
 }
 
 func (m *model) updateResults(actions []llm.Action) tea.Cmd {
@@ -117,7 +104,7 @@ func (m *model) updateResults(actions []llm.Action) tea.Cmd {
 }
 
 func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
-	items := m.filesToItems(m.files)
+	items := filesToItems(m.files)
 	remaining := make(map[string]llm.Action)
 	for k, v := range actions {
 		remaining[k] = v
@@ -149,57 +136,6 @@ func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
 	}
 
 	return items
-}
-
-func actionsToMap(actions []llm.Action) map[string]llm.Action {
-	checkMap := make(map[string]llm.Action)
-
-	// Prevent conflicts
-	for _, action := range actions {
-		log.Printf("add action to map: %s", action)
-		checkMap[action.Result] = action
-	}
-
-	// Add dirs if not exist, but prevent overrides
-	for result := range checkMap {
-		path := strings.Split(strings.TrimSuffix(result, "/"), "/")
-		if len(path) > 1 {
-			parenFolders := path[0 : len(path)-1]
-			log.Printf("parents: %v", parenFolders)
-			name := ""
-			for _, parent := range parenFolders {
-				name += parent + "/"
-				if v, ok := checkMap[name]; !ok {
-					log.Printf("create dir: %s", name)
-					checkMap[name] = llm.Action{Type: "create", Result: name}
-				} else {
-					log.Printf("exists dir: %v", v)
-				}
-			}
-		}
-	}
-
-	results := make(map[string]llm.Action)
-	for _, v := range checkMap {
-		if v.Name == "" {
-			results[v.Result] = v
-		} else {
-			results[v.Name] = v
-		}
-	}
-	return results
-}
-
-func maxDepth(actions []llm.Action) int {
-	maxDepth := 0
-	for _, action := range actions {
-		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
-		parents := len(path) - 1
-		if parents > maxDepth {
-			maxDepth = parents
-		}
-	}
-	return maxDepth
 }
 
 func (m model) applyChanges() tea.Msg {
