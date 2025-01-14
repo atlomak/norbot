@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 )
 
-func actionsToMap(actions []llm.Action) map[string]llm.Action {
+func generateActionMapWithDirs(actions []llm.Action) map[string]llm.Action {
 	checkMap := make(map[string]llm.Action)
 
 	// Prevent conflicts

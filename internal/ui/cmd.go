@@ -99,7 +99,7 @@ func (m *model) setItems(files fsutils.FileList) tea.Cmd {
 
 func (m *model) updateResults(actions []llm.Action) tea.Cmd {
 	m.maxDepth = maxDepth(actions)
-	m.actions = actionsToMap(actions)
+	m.actions = generateActionMapWithDirs(actions)
 	return m.list.SetItems(m.resultsToItems(m.actions))
 }
 
