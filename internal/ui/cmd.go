@@ -148,12 +148,18 @@ func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
 func actionsToMap(actions []llm.Action) map[string]llm.Action {
 	result := make(map[string]llm.Action)
 	for _, action := range actions {
-		log.Println(action)
-		if action.Name == "" {
-			result[action.Result] = action
-		} else {
-			result[action.Name] = action
+		log.Printf("add action to map: %s", action)
+		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
+		if len(path) > 1 {
+			// Assure, that every parent dir will be created. If dir exists, CreateDir will skip it
+			parenFolders := path[0 : len(path)-1]
+			log.Printf("parents: %v", parenFolders)
+			for _, parent := range parenFolders {
+				name := parent + "/"
+				result[name] = llm.Action{Type: "create", Result: name}
+			}
 		}
+		result[action.Name] = action
 	}
 	return result
 }

@@ -15,17 +15,9 @@ const (
 	query string = `
 You are an assistant helping to clean and organize directories efficiently. 
 For each file or directory in the provided list, determine an appropriate action:
-- If it is a photo, move it to a 'Photos/YYYY/MM' folder based on its creation date. 
-  Create the 'Photos/YYYY' and 'Photos/YYYY/MM' folders if they do not already exist.
-- For documents (e.g., PDFs, DOCs), move them to a 'Documents' folder, grouped by type. 
-  Create the 'Documents' folder if it does not exist.
-- For media files like videos or music, organize them into 'Videos' or 'Music' folders. 
-  Create these folders if they do not exist.
-- For archives (e.g., ZIP, RAR), move them to an 'Archives' folder. 
-  Create the 'Archives' folder if it does not exist.
+- Move files to new directories to group them by type, date, name etc.
 - Leave system or configuration files (e.g., hidden files, .log, .conf) in their current locations.
 - For files that do not match a known category, leave them in place.
-- Whenever a folder is created, include a record for that action.
 
 Rename files with inconsistent naming to use lowercase and replace spaces with underscores. 
 Ensure all actions follow a clear, user-friendly folder structure.
@@ -35,8 +27,6 @@ or don't move it at all to prevent overwriting or conflicts.
 
 Examples of actions:
 1. If a photo is moved to 'NewDir/NewSubDir', provide:
-   { "action": "create", "name": "", "result": "NewDir/" }
-   { "action": "create", "name": "", "result": "NewDir/NewSubDir/" }
    { "action": "move", "name": "example.jpg", "result": "NewDir/NewSubDir/example.jpg" }
 2. If a file is renamed, provide:
    { "action": "move", "name": "old-file.txt", "result": "old_file.txt" }
@@ -52,11 +42,10 @@ Always prioritize user input if given, but you have to follow rules of schema, a
 The type of operation to be performed. Possible values are:
 - 'move': File or directory is moved to a new location or changed name.
 - 'keep': File or directory is left unchanged.
-- 'create': A new folder is created.`
+`
 
 	nameDescription = `
 The original name or path of the file or directory before any action. 
- - If the action is "create", this field should be an empty string as there is no original path.
  - For directories, always include a trailing "/" at the end of the name.`
 
 	resultDescription = `
@@ -139,7 +128,7 @@ func InitGeminiModel(client *genai.Client, ctx context.Context) *GeminiModel {
 			Properties: map[string]*genai.Schema{
 				"action": {
 					Type:        genai.TypeString,
-					Enum:        []string{"move", "keep", "create"},
+					Enum:        []string{"move", "keep"},
 					Description: actionsDesciption,
 				},
 				"name": {
