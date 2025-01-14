@@ -76,7 +76,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		if m.progress.Percent() < 0.8 {
+		if m.progress.Percent() < 0.95 {
 			cmd := m.progress.IncrPercent(0.03)
 			return m, tea.Sequence(cmd, tickCmd())
 		}
