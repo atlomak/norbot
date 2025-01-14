@@ -9,21 +9,39 @@ Your little assistant for folder upkeeping.
 ## Building from source
 ### Prerequisites
  - Golang >= 1.23
-```
+
+Then in project root directory, run following command:
+```bash
 go build ./cmd/norbot
 ```
 
 ## Usage
-Set `GEMINI_API_KEY` environment variable with your api key
+To run the Norbot:
+ 1. Set `GEMINI_API_KEY` environment variable with your api key
 (you can get it [here](https://aistudio.google.com/app/apikey)),\
-then run the `Norbot` in the folder you would like to clean a bit.\
-After pressing `enter`, he will come up with an idea how to organize your files.\
-Like what you see? Press `y` to let Norbot clean up.
-Not a fan? Well, have fun losing your mind doing it manually...
+ 2. Run `Norbot` in the folder you would like to clean a bit.
 
-![](gif/norbot_demo.gif)
+Press `enter` to unleash the cleaning gnome...\
+Norbot will analyze your files and propose a better organization.
+![](gif/norbot-core.gif)
 
-Current version does not support adding additional prompt yet,
-but it's on my todo list.
+### Prompt
+Want to provide additional instructions to guide Norbot?
+Press `p` to add a custom prompt.
 
-Enjoy pointlessly blowing leafs... eh files around :)
+![](gif/norbot-prompt.gif)
+
+### Exclude results
+Not happy with Norbot's suggestions?\
+You can review and exclude specific files from the changes by selecting them and pressing `space`.\
+If everything looks good, press `y` to let Norbot do its job.
+
+![](gif/norbot-exclude.gif)
+
+---
+
+## Disclaimer
+
+Norbot is an early version hobby project and leverages a language model (LLM) to assist in file organization.\
+Mistakes might happen.\
+Always review the suggested changes before applying them, and feel free to provide feedback to help improve future versions.
