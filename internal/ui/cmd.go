@@ -160,8 +160,9 @@ func actionsToMap(actions []llm.Action) map[string]llm.Action {
 			// Assure, that every parent dir will be created. If dir exists, CreateDir will skip it
 			parenFolders := path[0 : len(path)-1]
 			log.Printf("parents: %v", parenFolders)
+			name := ""
 			for _, parent := range parenFolders {
-				name := parent + "/"
+				name += parent + "/"
 				result[name] = llm.Action{Type: "create", Result: name}
 			}
 		}
