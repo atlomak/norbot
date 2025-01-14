@@ -152,23 +152,42 @@ func (m model) resultsToItems(actions map[string]llm.Action) []list.Item {
 }
 
 func actionsToMap(actions []llm.Action) map[string]llm.Action {
-	result := make(map[string]llm.Action)
+	checkMap := make(map[string]llm.Action)
+
+	// Prevent conflicts
 	for _, action := range actions {
 		log.Printf("add action to map: %s", action)
-		path := strings.Split(strings.TrimSuffix(action.Result, "/"), "/")
+		checkMap[action.Result] = action
+	}
+
+	// Add dirs if not exist, but prevent overrides
+	for result := range checkMap {
+		path := strings.Split(strings.TrimSuffix(result, "/"), "/")
 		if len(path) > 1 {
-			// Assure, that every parent dir will be created. If dir exists, CreateDir will skip it
 			parenFolders := path[0 : len(path)-1]
 			log.Printf("parents: %v", parenFolders)
 			name := ""
 			for _, parent := range parenFolders {
 				name += parent + "/"
-				result[name] = llm.Action{Type: "create", Result: name}
+				if v, ok := checkMap[name]; !ok {
+					log.Printf("create dir: %s", name)
+					checkMap[name] = llm.Action{Type: "create", Result: name}
+				} else {
+					log.Printf("exists dir: %v", v)
+				}
 			}
 		}
-		result[action.Name] = action
 	}
-	return result
+
+	results := make(map[string]llm.Action)
+	for _, v := range checkMap {
+		if v.Name == "" {
+			results[v.Result] = v
+		} else {
+			results[v.Name] = v
+		}
+	}
+	return results
 }
 
 func maxDepth(actions []llm.Action) int {
