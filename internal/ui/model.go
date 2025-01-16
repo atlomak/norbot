@@ -76,8 +76,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		if m.progress.Percent() < 0.95 {
-			cmd := m.progress.IncrPercent(0.03)
+		if m.progress.Percent() < 0.9 {
+			var progressPerFile float64 = 1.0 / (15.0 + float64(len(m.files)))
+			cmd := m.progress.IncrPercent(progressPerFile)
 			return m, tea.Sequence(cmd, tickCmd())
 		}
 		return m, tickCmd()
