@@ -5,6 +5,14 @@
  /_/|_/  \____/ /_/|_| /____/ \____/ /_/     
 Your little assistant for folder upkeeping.
 ```
+Norbot is a simple terminal gnome, that will help you organize your files 📁
+
+## How it works
+Norbot scans all file names in the directory (but not the content!), along with their modification dates and sizes.\
+Based on this information, it suggests an improved file organization structure.
+
+*Note:* Norbot cannot delete your files. In the worst-case scenario, it might mindlessly blow them around but nothing will be lost!
+ 
 
 ## Building from source
 ### Prerequisites
@@ -18,7 +26,7 @@ go build ./cmd/norbot
 ## Usage
 To run the Norbot:
  1. Set `GEMINI_API_KEY` environment variable with your api key
-(you can get it [here](https://aistudio.google.com/app/apikey)),\
+(you can get it [here](https://aistudio.google.com/app/apikey))
  2. Run `Norbot` in the folder you would like to clean a bit.
 
 Press `enter` to unleash the cleaning gnome...\
