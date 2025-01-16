@@ -14,16 +14,15 @@ import (
 )
 
 type model struct {
-	list        list.Model
-	files       fsutils.FileList
-	actions     map[string]llm.Action
-	llm         *llm.GeminiModel
-	maxDepth    int
-	textInput   textinput.Model
-	progress    progress.Model
-	progessDone bool
-	status      status
-	err         error
+	list      list.Model
+	files     fsutils.FileList
+	actions   map[string]llm.Action
+	llm       *llm.GeminiModel
+	maxDepth  int
+	textInput textinput.Model
+	progress  progress.Model
+	status    status
+	err       error
 }
 
 type status int
@@ -33,7 +32,8 @@ const (
 	Input
 	Waiting
 	Ready
-	Finished
+	ShowExpected
+	ShowChanges
 	Error
 )
 
@@ -58,7 +58,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.handleError(msg.err, msg)
 			return m, nil
 		}
-		m.progessDone = true
+		m.status = Ready
 		updateResults := m.updateResults(msg.actions)
 		return m, tea.Batch(updateResults, m.sortItems)
 	case applyChangesMsg:
@@ -68,11 +68,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, readDir(".", m.maxDepth)
 	case tickMsg:
-		if m.progessDone && m.progress.Percent() < 1.0 {
+		if m.status == Ready && m.progress.Percent() < 1.0 {
 			cmd := m.progress.SetPercent(1.0)
 			return m, tea.Sequence(cmd, tickCmd())
-		} else if m.progessDone {
-			m.status = Ready
+		} else if m.status == Ready {
+			m.status = ShowExpected
 			return m, nil
 		}
 
@@ -91,10 +91,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "q", "ctrl+c":
 				return m, tea.Quit
 			case "enter":
-				if m.status == Finished {
+				if m.status == ShowChanges {
 					return m, tea.Quit
 				}
-				m.progessDone = false
 				m.status = Waiting
 				m.textInput.Blur()
 				return m, m.startQuery(m.files, m.textInput.Value())
@@ -109,17 +108,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			if m.status == Finished {
+			if m.status == ShowChanges {
 				return m, tea.Quit
 			}
-			m.progessDone = false
 			m.status = Waiting
 			return m, m.startQuery(m.files, "")
 		case "y":
-			if m.status == Finished {
+			if m.status == ShowChanges {
 				return m, tea.Quit
 			}
-			m.status = Finished
+			m.status = ShowChanges
 			return m, m.applyChanges
 		case " ":
 			if m.status != Ready {
@@ -153,12 +151,12 @@ func (m model) View() string {
 		statusPanel = m.welcomePanelView()
 	case Input:
 		statusPanel = m.inputPanelView()
-	case Waiting:
+	case Waiting, Ready:
 		statusPanel = m.loadingPanelView()
-	case Ready:
-		statusPanel = m.readyPanelView()
-	case Finished:
-		statusPanel = m.finishPanelView()
+	case ShowExpected:
+		statusPanel = m.expectedPanelView()
+	case ShowChanges:
+		statusPanel = m.changesPanelView()
 	case Error:
 		statusPanel = m.errorPanelView()
 		return lipgloss.JoinVertical(lipgloss.Top, statusPanelStyle.Render(statusPanel), m.err.Error())

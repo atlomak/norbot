@@ -50,13 +50,13 @@ func (m model) loadingPanelView() string {
 	return s
 }
 
-func (m model) readyPanelView() string {
+func (m model) expectedPanelView() string {
 	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render("Press y to apply Norbot changes. Press space to reject selected file.")
 	return s
 }
 
-func (m model) finishPanelView() string {
+func (m model) changesPanelView() string {
 	s := statusTitleStyle.Render(norbot)
 	s += bottomStatusStyle.Render("Norbot finished. Bowing. More bowing")
 	return s
