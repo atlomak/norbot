@@ -50,4 +50,5 @@ If everything looks good, press `y` to let Norbot do its job.
 Norbot is an early version hobby project and leverages a language model (LLM) to assist in file organization.\
 Mistakes might happen.\
 Always review the suggested changes before applying them, and feel free to provide feedback to help improve future versions.
+
 *Note:* Norbot cannot delete your files. In the worst-case scenario, it might mindlessly blow them around but nothing will be lost!
