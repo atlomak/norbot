@@ -120,7 +120,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = ShowChanges
 			return m, m.applyChanges
 		case " ":
-			if m.status != Ready {
+			if m.status != ShowExpected {
 				return m, nil
 			}
 			return m, tea.Sequence(m.toggleItem, m.sortItems)
