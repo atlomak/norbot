@@ -9,10 +9,7 @@ Norbot is a simple terminal gnome, that will help you organize your files 📁
 
 ## How it works
 Norbot scans all file names in the directory (but not the content!), along with their modification dates and sizes.\
-Based on this information, it suggests an improved file organization structure.
-
-*Note:* Norbot cannot delete your files. In the worst-case scenario, it might mindlessly blow them around but nothing will be lost!
- 
+Based on this information, it suggests an improved file organization structure. 
 
 ## Building from source
 ### Prerequisites
@@ -53,3 +50,4 @@ If everything looks good, press `y` to let Norbot do its job.
 Norbot is an early version hobby project and leverages a language model (LLM) to assist in file organization.\
 Mistakes might happen.\
 Always review the suggested changes before applying them, and feel free to provide feedback to help improve future versions.
+*Note:* Norbot cannot delete your files. In the worst-case scenario, it might mindlessly blow them around but nothing will be lost!
